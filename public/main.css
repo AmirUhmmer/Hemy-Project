@@ -1,0 +1,122 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    /* width: 100vw; */
+    font-family: Polyphonic SemiBold;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+#sidebar, #preview {
+    position: absolute;
+}
+
+/* #overlay {
+    position: absolute;
+    left: 31em;
+    top: 3.5em;
+    z-index: 2;
+  } */
+
+
+
+#sidebar {
+    width: 25%;
+    height: 100vh;
+    left: 0;
+    bottom: 0;
+    /* visibility: hidden; */
+    /* comment visibility for sidebar */
+    overflow-y: scroll;
+}
+
+
+#preview {
+    width: 75%; 
+    height: 100vh;
+    /* 75% if enable sidebar */
+    right: 0;
+    bottom: 0;
+}
+
+#login {
+    font-family: ArtifaktElement;
+    font-size: 1em;
+}
+
+#tree {
+    margin: 0.5em;
+}
+
+@media (max-width: 768px) {
+
+}
+
+@media (max-width: 10px) {
+    /* #sidebar {
+        width: 100%;
+        top: 3em;
+        bottom: 75%;
+    } */
+    #preview {
+        width: 100%;
+        top: 25%;
+        bottom: 0;
+        overflow-x: hidden;
+    }
+    
+}
+
+
+@media (max-width: 1900px) {
+
+}
+
+.icon-hub:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/apps-16.svg); /* or https://raw.githubusercontent.com/primer/octicons/main/icons/stack-16.svg */
+    background-size: cover;
+}
+
+.icon-project:before {
+    
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/project-16.svg); /* or https://raw.githubusercontent.com/primer/octicons/main/icons/organization-16.svg */
+    background-size: cover;
+}
+
+.icon-my-folder:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/file-directory-16.svg);
+    background-size: cover;
+}
+
+.icon-item:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/file-16.svg);
+    background-size: cover;
+}
+
+.icon-version:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/clock-16.svg);
+    background-size: cover;
+}
+
+
+/* Custom scroll bar for Webkit browsers (Chrome, Safari, Edge) */
+.scrollContainer::-webkit-scrollbar {
+    width: 6px; /* Adjust the width of the scroll bar */
+  }
+  
+  .scrollContainer::-webkit-scrollbar-thumb {
+    background-color: #555; /* Scroll bar thumb (the draggable part) */
+    border-radius: 10px;     /* Rounded corners for a sleeker look */
+  }
+  
+  .scrollContainer::-webkit-scrollbar-track {
+    background-color: #2c2c2c; /* Scroll bar track (the part below the thumb) */
+  }
+  
+  /* Scroll bar for Firefox */
+  .scrollContainer {
+    scrollbar-width: thin; /* Set scroll bar to thin in Firefox */
+    scrollbar-color: #555 #2c2c2c; /* Thumb color #555 and track color #2c2c2c */
+  }
+  
