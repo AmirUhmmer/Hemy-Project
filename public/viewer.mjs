@@ -1,3 +1,5 @@
+import * as functions from './functions.mjs';
+
 async function getAccessToken(callback) {
     try {
         // const resp = await fetch('/api/auth/token');
@@ -38,11 +40,13 @@ export function initViewer(container) {
             viewer.setQualityLevel(true, true);
             // console.log(accessToken);
 
+            viewer.loadExtension('Autodesk.DataVisualization').then(() => {
+                console.log('Autodesk.DataVisualization loaded.');
+            });
 
-
+            
             const canvas = viewer.impl.canvas;
-                     
-
+                    
             
             resolve(viewer);
         });
@@ -53,7 +57,11 @@ export function initViewer(container) {
 
 export function loadModel(viewer, urn) {
     function onDocumentLoadSuccess(doc) {
-        viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
+        const loaded = viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
+        if (loaded){
+            functions.toolbarButtons(viewer);
+            //functions.filesButtonToolbar(viewer);
+        }
     }
     function onDocumentLoadFailure(code, message) {
         //alert('Could not load model. See console for more details.');
