@@ -1,26 +1,166 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- <link rel="icon" type="image/x-icon" href="https://cdn.autodesk.io/favicon.ico"> -->
-    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css">
-    <link rel="stylesheet" href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css">
-    <link rel="stylesheet" href="./main.css">
+    <link
+      rel="stylesheet"
+      href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css"
+    />
+    <link rel="stylesheet" href="./main.css" />
 
     <title>Hemy Projects</title>
-</head>
-<!-- test main branch -->
-<body>
-
-    <button id="login" style="visibility: hidden;">Login</button>
-    <div id="sidebar">
-        <div id="tree"></div>
+  </head>
+  <!-- test main branch -->
+  <body>
+    <!----------------------------- VIEWER SIDEBAR ----------------------------->
+    <button id="login" style="visibility: hidden">Login</button>
+    <div id="viewerSidebar">
+      <div id="viewerControls">
+        <button class="control-btn" id="files">
+          <img src="images/files.svg" alt="Model Browser" />
+        </button>
+        <button class="control-btn" id="sheets">
+          <img src="images/sheets.svg" alt="Sheets & Views" />
+        </button>
+        <button class="control-btn">
+          <img src="images/layer.png" alt="Levels" />
+        </button>
+        <button class="control-btn" id="model-browser">
+          <img src="images/model search.png" alt="Model Browser" />
+        </button>
+      </div>
     </div>
+    <!----------------------------- VIEWER SIDEBAR ----------------------------->
+
+    <div id="sidebar">
+      <div id="tree"></div>
+    </div>
+
+    <!----------------------------- SHEETS PANEL ----------------------------->
+    <div id="sheetsPanel">
+      <div class="panel-header">
+        <h3>Sheets & Views</h3>
+        <button class="close-btn">✕</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab active" data-tab="tab2d">2D</button>
+        <button class="tab" data-tab="tab3d">3D</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" placeholder="Search" />
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content tab2d active-tab">
+        <div class="sheet-item">
+          <img src="images/3d.svg" alt="Sheet" />
+          <span>0 Branntegning 15.09.21 U</span>
+        </div>
+        <div class="sheet-item">
+          <img src="images/3d.svg" alt="Sheet" />
+          <span> 15.09.21 U</span>
+        </div>
+        <!-- More 2D items -->
+      </div>
+      <div class="tab-content tab3d">
+        <div class="sheet-item">
+          <img src="images/3d.svg" alt="3D View" />
+          <span>3D Overview</span>
+        </div>
+        <!-- More 3D items -->
+      </div>
+    </div>
+    <!----------------------------- SHEETS PANEL ----------------------------->
+
+    <!----------------------------- MODEL BROWSER ----------------------------->
+<div class="model-browser" id="model-browser-panel">
+  <h2>Model Browser</h2>
+
+  <div class="filter-group">
+    <label for="categories">Categories</label>
+    <select id="categories">
+      <option>Select categories...</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="disciplines">Disciplines</label>
+    <select id="disciplines">
+      <option>Select disciplines...</option>
+    </select>
+  </div>
+
+  <div class="filters-footer">
+    Show more &nbsp;|&nbsp; Edit filters
+  </div>
+
+  <div class="tree">
+    <div class="tree-item parent" data-id="walls">
+      <span class="expand">▾</span>
+      <span class="eye">👁️</span>
+      Walls
+    </div>
+    <div class="children" data-parent="walls">
+      <div class="tree-item">
+        <span class="expand"></span>
+        <span class="eye">👁️</span>
+        Basic Wall
+      </div>
+      <div class="tree-item">
+        <span class="expand"></span>
+        <span class="eye">👁️</span>
+        Curtain Wall
+      </div>
+    </div>
+
+    <div class="tree-item parent" data-id="floors">
+      <span class="expand">▸</span>
+      <span class="eye">🚫</span>
+      Floors
+    </div>
+    <div class="children" data-parent="floors">
+      <div class="tree-item">
+        <span class="expand"></span>
+        <span class="eye">👁️</span>
+        Floor Type A
+      </div>
+    </div>
+
+    <div class="tree-item">
+      <span class="expand"></span>
+      <span class="eye">🚫</span>
+      Curtain Panels
+    </div>
+
+    <div class="tree-item">
+      <span class="expand"></span>
+      <span class="eye">👁️</span>
+      Windows
+    </div>
+
+    <div class="tree-item">
+      <span class="expand"></span>
+      <span class="eye">👁️</span>
+      Roofs
+    </div>
+  </div>
+</div>
+
+
+    <!----------------------------- MODEL BROWSER ----------------------------->
+
     <div id="preview"></div>
 
-    <script>window.USE_OPFS = true;</script>
+    <script>
+      window.USE_OPFS = true;
+    </script>
+    <script src="viewerSidebar.mjs"></script>
     <!-- <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script> -->
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.99/viewer3D.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
@@ -28,6 +168,5 @@
     <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="./main.mjs"></script>
-</body>
-
+  </body>
 </html>

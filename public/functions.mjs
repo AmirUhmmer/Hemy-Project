@@ -1,5 +1,10 @@
 export function toolbarButtons(viewer){
-    viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () {
+    viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () { 
+        let models = window.viewerInstance.impl.modelQueue().getModels();
+        let urn = models[0].getDocumentNode().getDefaultGeometry().children[1].data.urn; // Get the URN of the first model
+        const modelUrn = urn.split('fs.file:')[1].split('/')[0];
+        window.modelUrn = modelUrn;
+        console.log('Model URN:', modelUrn);
         viewer.unloadExtension('Autodesk.Explode');
         const modelTools = viewer.toolbar.getControl('modelTools');
         const navTools = viewer.toolbar.getControl('navTools');
@@ -10,13 +15,16 @@ export function toolbarButtons(viewer){
 
         const settingsTools = viewer.toolbar.getControl('settingsTools');
         settingsTools.removeControl('toolbar-modelStructureTool');
-        //this.viewer.setProgressiveRendering(true);
-        console.log('GEOMETRY_LOADED_EVENT');
 
-        document.getElementById('preview').style.width = '100%';
+        document.getElementById('preview').style.width = '97%';
         document.getElementById('sidebar').style.visibility = 'hidden';
-
+        document.getElementById('viewerSidebar').style.visibility = 'visible';
         filesButtonToolbar(viewer);
+
+            setTimeout(() => {
+                viewer.resize();
+                viewer.fitToView();
+            }, 300);
     });
 }
 

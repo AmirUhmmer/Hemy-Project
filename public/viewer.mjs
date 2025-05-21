@@ -1,5 +1,7 @@
 import * as functions from './functions.mjs';
 
+let viewerInstance;
+
 async function getAccessToken(callback) {
     try {
         // const resp = await fetch('/api/auth/token');
@@ -44,11 +46,18 @@ export function initViewer(container) {
                 console.log('Autodesk.DataVisualization loaded.');
             });
 
+            viewer.loadExtension('Autodesk.AEC.LevelsExtension').then((levelsExt) => {
+                console.log('Autodesk.AEC.LevelsExtension loaded.');
+                
+            });
+
             
             const canvas = viewer.impl.canvas;
                     
             
             resolve(viewer);
+
+            window.viewerInstance = viewer;
         });
     });
 }
@@ -60,7 +69,7 @@ export function loadModel(viewer, urn) {
         const loaded = viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
         if (loaded){
             functions.toolbarButtons(viewer);
-            //functions.filesButtonToolbar(viewer);
+            
         }
     }
     function onDocumentLoadFailure(code, message) {
