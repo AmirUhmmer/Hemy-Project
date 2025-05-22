@@ -15,13 +15,20 @@ tabs.forEach((tab) => {
 
 document.querySelector(".close-btn").addEventListener("click", () => {
   document.getElementById("sheetsPanel").style.visibility = "hidden";
+  preview.style.width = "97%";
+  setTimeout(() => {
+    window.viewerInstance.resize();
+    window.viewerInstance.fitToView();
+  }, 300);
 });
 
 document.getElementById("sheets").addEventListener("click", sheetsPanel);
 document.getElementById("files").addEventListener("click", filesPanel);
-document.getElementById("model-browser").addEventListener("click", modelBrowserPanel);
+document
+  .getElementById("model-browser")
+  .addEventListener("click", modelBrowserPanel);
 
-document.getElementById('filter').addEventListener('keydown', function(event) { 
+document.getElementById("filter").addEventListener("keydown", function (event) {
   window.viewerInstance.search(
     document.getElementById("filter").value,
     function (dbIDs) {
@@ -50,8 +57,7 @@ document.getElementById('filter').addEventListener('keydown', function(event) {
       console.error("Search error:", error); // Handle any potential search errors
     }
   );
-})
-
+});
 
 document.getElementById("search").addEventListener("click", function first() {
   // viewer.search(
@@ -101,6 +107,15 @@ function sheetsPanel() {
   const panel = document.getElementById("sheetsPanel");
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
+  panel.style.visibility = isVisible
+    ? (document.getElementById("preview").style.width = "97%")
+    : (document.getElementById("preview").style.width = "75%");
+
+
+  setTimeout(() => {
+    window.viewerInstance.resize();
+    window.viewerInstance.fitToView();
+  }, 300);
 
   const viewer = window.viewerInstance;
   if (!viewer) {
@@ -242,6 +257,11 @@ function sheetsPanel() {
   }
 }
 
+
+
+
+
+
 function filesPanel() {
   const viewer = window.viewerInstance;
   const model = viewer.impl.modelQueue().getModels()[0];
@@ -261,10 +281,27 @@ function filesPanel() {
   }, 300);
 }
 
+
+
+
+
+
+
+
+
 function modelBrowserPanel() {
   const panel = document.getElementById("model-browser-panel");
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
+  panel.style.visibility = isVisible
+    ? (document.getElementById("preview").style.width = "97%")
+    : (document.getElementById("preview").style.width = "75%");
+
+
+  setTimeout(() => {
+    window.viewerInstance.resize();
+    window.viewerInstance.fitToView();
+  }, 300);
 
   const viewer = window.viewerInstance;
   const model = viewer.impl.modelQueue().getModels()[0];

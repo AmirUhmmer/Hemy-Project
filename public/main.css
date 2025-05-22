@@ -163,7 +163,7 @@ html {
   visibility: hidden;
   position: fixed;
   top: 0;
-  right: 0;
+  left: 3%;
   /* left: 50px; comes right after the sidebar */
   width: 25%;
   height: 100vh;
@@ -273,7 +273,7 @@ html {
   visibility: hidden;
   position: fixed;
   top: 0;
-  right: 0;
+  left: 3%;
   width: 25%;
   height: 100vh;
   background: white;
