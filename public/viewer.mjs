@@ -51,6 +51,14 @@ export function initViewer(container) {
                 
             });
 
+
+            viewer.loadExtension('Autodesk.Viewing.MarkupsCore')
+            .then(function(markupsExt) {
+                console.log('MarkupsCore loaded');
+                // Save the extension instance for later
+                window.markupsExt = markupsExt;
+            });
+
             
             const canvas = viewer.impl.canvas;
                     

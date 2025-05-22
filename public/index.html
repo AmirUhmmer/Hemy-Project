@@ -28,8 +28,8 @@
         <button class="control-btn" id="sheets">
           <img src="images/sheets.svg" alt="Sheets & Views" />
         </button>
-        <button class="control-btn">
-          <img src="images/layer.png" alt="Levels" />
+        <!-- <button class="control-btn">
+          <img src="images/layer.png" alt="Levels" /> -->
         </button>
         <button class="control-btn" id="model-browser">
           <img src="images/model search.png" alt="Model Browser" />
@@ -81,8 +81,14 @@
     <!----------------------------- MODEL BROWSER ----------------------------->
 <div class="model-browser" id="model-browser-panel">
   <h2>Model Browser</h2>
-
-  <div class="filter-group">
+  <div class="search-bar">
+    <div class="search-container">
+      <input id="filter" type="text" placeholder="Search" />
+      <button id="search" aria-label="Search"></button>
+    </div>
+  </div>
+  
+  <!-- <div class="filter-group">
     <label for="categories">Categories</label>
     <select id="categories">
       <option>Select categories...</option>
@@ -98,7 +104,7 @@
 
   <div class="filters-footer">
     Show more &nbsp;|&nbsp; Edit filters
-  </div>
+  </div> -->
 
   <div class="tree">
     <div class="tree-item parent" data-id="walls">
