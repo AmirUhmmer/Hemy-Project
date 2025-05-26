@@ -109,7 +109,7 @@ function sheetsPanel() {
   panel.style.visibility = isVisible ? "hidden" : "visible";
   panel.style.visibility = isVisible
     ? (document.getElementById("preview").style.width = "97%")
-    : (document.getElementById("preview").style.width = "75%");
+    : (document.getElementById("preview").style.width = "72%");
 
 
   setTimeout(() => {
@@ -272,9 +272,11 @@ function filesPanel() {
   panel.style.visibility = isVisible ? "hidden" : "visible";
   panel.style.visibility = isVisible
     ? (preview.style.width = "97%")
-    : (preview.style.width = "70%");
+    : (preview.style.width = "72%");
   document.getElementById("sidebar").style.left = "3%";
 
+
+    
   setTimeout(() => {
     viewer.resize();
     viewer.fitToView();
@@ -295,7 +297,7 @@ function modelBrowserPanel() {
   panel.style.visibility = isVisible ? "hidden" : "visible";
   panel.style.visibility = isVisible
     ? (document.getElementById("preview").style.width = "97%")
-    : (document.getElementById("preview").style.width = "75%");
+    : (document.getElementById("preview").style.width = "72%");
 
 
   setTimeout(() => {

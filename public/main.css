@@ -164,14 +164,16 @@ html {
   position: fixed;
   top: 0;
   left: 3%;
-  /* left: 50px; comes right after the sidebar */
   width: 25%;
   height: 100vh;
   background: white;
-  border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
   z-index: 999;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 1px;
+  overflow: hidden; /* Prevent outer scrollbars */
 }
 
 .panel-header {
