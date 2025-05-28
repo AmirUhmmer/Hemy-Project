@@ -10,28 +10,6 @@ const querystring = require('querystring');
 
 const sql = require('mssql');
 
-
-
-// Azure SQL configuration
-const config = {
-    user: 'sqlserverdb8_admin',
-    password: 'jCz91%z%FlS7',
-    server: 'sqlserverdb8.database.windows.net',
-    database: 'SQLDB_DB8',
-    options: {
-        encrypt: true,
-        enableArithAbort: true,
-        trustServerCertificate: true, // Change to false in production for a secure setup
-    },
-    pool: {
-        max: 10, // Maximum number of connections in the pool
-        min: 0,  // Minimum number of connections in the pool
-        idleTimeoutMillis: 30000 // Close idle connections after 30 seconds
-    },
-    requestTimeout: 60000,  // Increase request timeout to 60 seconds
-    connectionTimeout: 30000  // Increase connection timeout to 30 seconds
-};
-
 let router = express.Router();
 
 // Enable CORS with specific origin (your Dynamics URL)
@@ -68,13 +46,6 @@ router.get('/api/auth/callback', authCallbackMiddleware, (req, res) => {
         </script>
     `);
 });
-
-
-// router.get('/api/auth/token', authRefreshMiddleware, function (req, res) {
-//     res.json(req.publicOAuthToken);
-// });
-
-// ENABLE TOP CODE TO VIEW THE SIDEBAR MAIN.MJS, AUTH/TOKEN, AUTH/PROFILE
 
 router.get('/api/auth/token', async (req, res) => {
     try {
@@ -114,20 +85,6 @@ router.get('/api/auth/token', async (req, res) => {
     }
 });
 
-
-// router.get('/api/auth/profile', async function (req, res, next) {
-//     try {
-//         const authToken = req.headers.authorization?.split(' ')[1]; // Extract token from headers
-//         const profile = await getUserProfile(authToken);
-//         res.json({ name: `${profile.name}` });
-//     } catch (err) {
-//         next('ERROR: ' + err);
-//     }
-// });
-
-
-// ENABLE TOP CODE TO VIEW THE SIDEBAR MAIN.MJS, AUTH/TOKEN, AUTH/PROFILE
-
 router.get('/api/auth/profile', async function (req, res, next) {
     try {
         const authToken = req.headers.authorization?.split(' ')[1]; // Extract token from headers
@@ -140,192 +97,12 @@ router.get('/api/auth/profile', async function (req, res, next) {
 });
 
 
-// Create a connection pool (this will be reused for all requests)
-let poolPromise;
-
-async function getPool() {
-    if (!poolPromise) {
-        // Create the pool only once on the first request
-        poolPromise = sql.connect(config);
-    }
-    return poolPromise;
-}
 
 
-
-
-// --------------------------------------------------------------------------- LIVE DATA ---------------------------------------------------------------------------
-
-// TEMPERATURE SENSOR
-// Route to retrieve sensor value
-router.get('/api/sensor/:location', async (req, res) => {
-    const location = req.params.location;
-    try {
-        // Get the connection pool
-        const pool = await getPool();
-
-        // Query the database
-        const result = await pool.request()
-            .input('location', sql.VarChar, location)
-            .query('SELECT TOP (1) [value], [observationTime] FROM [dbo].[LiveData] WHERE sensorId = @location ORDER BY observationTime DESC');
-
-        if (result.recordset.length > 0) {
-            res.json({ value: result.recordset[0].value });
-        } else {
-            res.status(404).send('Sensor not found');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error retrieving sensor value');
-    }
+// --------------------------------------------------------------------------- MARKUPS ---------------------------------------------------------------------------
+router.get('/markup/save/:markupData', async (req, res) => {
+    const markupData = req.params.markupData;
 });
-
-// TEMPERATURE SENSOR V2 [HG62]
-//Room Thermostat-1.92.HG62_Setpoint
-//Panel Heater-1.89.HG62_Status
-router.get('/api/sensorv2/:location', async (req, res) => {
-    const location = req.params.location;
-    try {
-        // Get the connection pool
-        const pool = await getPool();
-
-        // Query the database
-        const result = await pool.request()
-            .input('location', sql.VarChar, location)
-            .query('SELECT TOP (1) [value], [observationTime] FROM [dbo].[LiveData] WHERE deviceId = @location ORDER BY observationTime DESC');
-
-        if (result.recordset.length > 0) {
-            res.json({ value: result.recordset[0].value });
-        } else {
-            res.status(404).send('Sensor not found');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error retrieving sensor value');
-    }
-});
-
-router.get('/api/LightSensor/:location', async (req, res) => {
-    const location = req.params.location;
-    try {
-        // Get the connection pool
-        const pool = await getPool();
-
-        // Query the database
-        const result = await pool.request()
-            .input('location', sql.VarChar, location)
-            .query('SELECT TOP (1) [value], [observationTime] FROM [dbo].[LiveData] WHERE sensorId = @location ORDER BY observationTime DESC');
-
-        if (result.recordset.length > 0) {
-            res.json({ value: result.recordset[0].value });
-        } else {
-            res.status(404).send('Sensor not found');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error retrieving sensor value');
-    }
-});
-
-// Route to fetch graph data
-router.get('/api/graphdata/:location', async (req, res) => {
-    const location = req.params.location;
-    try {
-        // Get the connection pool
-        const pool = await getPool();
-
-        // Query the database
-        const result = await pool.request()
-            .input('location', sql.VarChar, location)
-            .query(`
-                SELECT TOP (1)
-                FORMAT(ld.observationTime, 'HH:mm - dd MMM') AS observationTime,
-                    ld.value
-                FROM
-                    [dbo].[LiveData] ld
-                WHERE
-                    ld.sensorId = @location
-                ORDER BY
-                    ld.observationTime DESC
-            `);
-
-        if (result.recordset.length > 0) {
-            res.json(result.recordset);
-        } else {
-            res.status(404).send('No data found for the specified location');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error retrieving graph data');
-    }
-});
-
-
-
-router.get('/api/TempSetpoint/:location', async (req, res) => {
-    const location = req.params.location;
-    try {
-        // Get the connection pool
-        const pool = await getPool();
-
-        // Query the database
-        const result = await pool.request()
-            .input('location', sql.VarChar, location)
-            .query(`
-                WITH RankedData AS (
-                    SELECT 
-                        [deviceId], 
-                        [value], 
-                        [observationTime], 
-                        [quantityKind], 
-                        ROW_NUMBER() OVER (PARTITION BY [quantityKind] ORDER BY [observationTime] DESC) AS rn 
-                    FROM 
-                        [dbo].[LiveData] 
-                    WHERE 
-                        deviceId = @location 
-                        AND (quantityKind LIKE '%HG62_Sensor%' OR quantityKind LIKE '%HG62_Setpoint%')
-                )
-                SELECT 
-                    [deviceId], 
-                    [value], 
-                    [observationTime], 
-                    [quantityKind]
-                FROM 
-                    RankedData
-                WHERE 
-                    rn = 1;
-            `);
-
-        if (result.recordset.length > 0) {
-            // Assuming you want to respond with both value and setpoint based on quantityKind
-            const sensorData = result.recordset.reduce((acc, record) => {
-                if (record.quantityKind.includes('Sensor')) {
-                    acc.value = record.value;
-                }
-                if (record.quantityKind.includes('Setpoint')) {
-                    acc.setpoint = record.value;
-                }
-                acc.observationTime = record.observationTime; // Format the date
-                return acc;
-            }, {});
-
-            res.json(sensorData);
-        } else {
-            res.status(404).send('Sensor not found');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error retrieving sensor value');
-    }
-});
-
-
-
-// --------------------------------------------------------------------------- LIVE DATA ---------------------------------------------------------------------------
-
-
-
-
 
 
 
@@ -345,8 +122,6 @@ router.post('/api/data', (req, res) => {
     res.status(200).send('Data received successfully');
 });
 
-
-// test
 
 
 module.exports = router;

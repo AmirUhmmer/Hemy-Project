@@ -16,6 +16,7 @@ export function toolbarButtons(viewer) {
         window.viewerInstance.loadExtension("PencilButton");
         window.viewerInstance.loadExtension("ShapeButton");
         window.viewerInstance.loadExtension("TextButton");
+        window.viewerInstance.loadExtension("SaveButton");
       });
 
     viewer.unloadExtension("Autodesk.Explode");
@@ -69,6 +70,8 @@ class PencilButton extends Autodesk.Viewing.Extension {
     this.button.setIcon("url(./images/faro.svg)");
 
     this.button.onClick = () => {
+      this.group = this.viewer.toolbar.getControl("markupsTools");
+      this.group.container.style.display = "flex";
       this.toggled = !this.toggled;
       console.log("Toggled:", this.toggled);
       this.button.container.classList.toggle("active");
@@ -78,6 +81,8 @@ class PencilButton extends Autodesk.Viewing.Extension {
 
       if (this.toggled) {
         // Create markup sheet if needed
+        this.group = this.viewer.toolbar.getControl("markupsTools");
+        this.group.container.style.display = "flex";
         if (!window.markupsExt.markups) {
           window.markupsExt.createMarkupSheet();
         }
@@ -162,6 +167,8 @@ class TextButton extends Autodesk.Viewing.Extension {
     this.button.setToolTip("Text Markup");
 
     this.button.onClick = () => {
+      this.group = this.viewer.toolbar.getControl("markupsTools");
+      this.group.container.style.display = "flex";
       this.toggled = !this.toggled;
       console.log("Toggled:", this.toggled);
       this.button.container.classList.toggle("active");
@@ -170,6 +177,8 @@ class TextButton extends Autodesk.Viewing.Extension {
         : "url(./images/text.svg)";
 
       if (this.toggled) {
+        this.group = this.viewer.toolbar.getControl("markupsTools");
+        this.group.container.style.display = "flex";
         // Create markup sheet if needed
         if (!window.markupsExt.markups) {
           window.markupsExt.createMarkupSheet();
@@ -227,6 +236,13 @@ class TextButton extends Autodesk.Viewing.Extension {
   }
 }
 
+
+
+
+
+
+// ***************** SHAPE BUTTON *****************
+
 class ShapeButton extends Autodesk.Viewing.Extension {
   constructor(viewer, options) {
     super(viewer, options);
@@ -252,6 +268,8 @@ class ShapeButton extends Autodesk.Viewing.Extension {
     this.button.setToolTip("Shape Markup");
 
     this.button.onClick = () => {
+      this.group = this.viewer.toolbar.getControl("markupsTools");
+      this.group.container.style.display = "flex";
       this.toggled = !this.toggled;
       console.log("Toggled:", this.toggled);
       this.button.container.classList.toggle("active");
@@ -317,6 +335,98 @@ class ShapeButton extends Autodesk.Viewing.Extension {
   }
 }
 
+
+
+
+
+// ***************** save BUTTON *****************
+
+class SaveButton extends Autodesk.Viewing.Extension {
+  constructor(viewer, options) {
+    super(viewer, options);
+    this.button = null;
+    this.group = null;
+    this.toggled = false;
+  }
+
+  load() {
+    this.createButton();
+    return true;
+  }
+
+  unload() {
+    if (this.group) {
+      this.viewer.toolbar.removeControl(this.group);
+    }
+    return true;
+  }
+
+  createButton() {
+    this.button = new Autodesk.Viewing.UI.Button("SaveButton");
+    this.button.setToolTip("Save Markup");
+    this.group = this.viewer.toolbar.getControl("markupsTools");
+    this.group.container.style.display = "flex";
+    //1F54156C407D46EC8E55930338091819
+    this.button.onClick = async () => {
+      this.group = this.viewer.toolbar.getControl("markupsTools");
+      this.group.container.style.display = "flex";
+      this.toggled = !this.toggled;
+      console.log("Saved:", this.toggled);
+      let markupData = window.markupsExt.generateData();
+      let urn = window.viewerInstance.model.getSeedUrn();
+      let params = {};
+      let queryString = window.location.search.substring(1);
+      let queryParts = queryString.split("&");
+      for (let i = 0; i < queryParts.length; i++) {
+          let param = queryParts[i].split("=");
+          params[decodeURIComponent(param[0])] = decodeURIComponent(param[1]);
+      };
+      let projectid = params["projectid"];
+      // const response = await fetch('https://prod-189.westeurope.logic.azure.com:443/workflows/648f7d062b8f4fb7bb200fb9a0cd7ca4/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0TJSRQdgZwnOnfxsrHgpuqeNJK5s1zkrx-4mctfQJ9U', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ urn: urn, data: markupData, projectid: projectid })
+      // });
+      // console.log(urn);
+      // const response = await fetch(`/markup/save`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     urn: urn,
+      //     data: markupData
+      //   })
+      // });
+    };
+
+    // Use a toolbar group to contain the button
+    let toolbar = this.viewer.getToolbar();
+    this.group = this.viewer.toolbar.getControl("markupsTools");
+    if (!this.group) {
+      this.group = new Autodesk.Viewing.UI.ControlGroup("markupsTools");
+      toolbar.addControl(this.group);
+    }
+    this.group.addControl(this.button);
+
+    // Place this group absolutely at the far right and center it vertically
+    this.group.container.style.position = "absolute";
+    this.group.container.style.right = "10px";
+    this.group.container.style.top = "-50vh";
+    this.group.container.style.display = "flex";
+    this.group.container.style.flexDirection = "column";
+    this.group.container.style.alignItems = "flex-start";
+    this.group.container.style.zIndex = "10000"; // Make sure it's above markup UI
+    this.group.container.style.pointerEvents = "auto"; // Ensure it can receive clicks
+    // Style the button
+    // toggled color -- #004eeb  #fffafa
+    // not toggled color -- #fffafa
+    this.button.container.style.backgroundImage = "url(./images/save.svg)";
+    this.button.container.style.backgroundSize = "contain";
+    this.button.container.style.backgroundRepeat = "no-repeat";
+    this.button.container.style.backgroundPosition = "center";
+    this.button.container.style.backgroundSize = "25px"; // Adjust size of the background image
+  }
+}
+
 Autodesk.Viewing.theExtensionManager.registerExtension(
   "PencilButton",
   PencilButton
@@ -329,6 +439,11 @@ Autodesk.Viewing.theExtensionManager.registerExtension(
   "ShapeButton",
   ShapeButton
 );
+Autodesk.Viewing.theExtensionManager.registerExtension(
+  "SaveButton",
+  SaveButton
+);
+
 
 // class FileBarPanel extends Autodesk.Viewing.UI.DockingPanel {
 //   constructor(viewer, id, title) {
