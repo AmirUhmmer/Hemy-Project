@@ -97,19 +97,20 @@ document.getElementById("search").addEventListener("click", function first() {
   );
 });
 
+    window.svgData = window.svgData || [];
 
     window.addEventListener("message", (event) => {
         // Optional: check event.origin to verify sender
         if (event.data?.type === "SVG_DATA") {
             console.log("Received SVGs:", event.data.payload);
             window.svgData.push(...event.data.payload);
-            event.data.payload.forEach(svg => {
-                const container = document.createElement("div");
-                container.innerHTML = svg.content;
-                container.style.border = "1px solid #ddd";
-                container.style.margin = "10px";
-                document.body.appendChild(container);
-            });
+            // event.data.payload.forEach(svg => {
+            //     const container = document.createElement("div");
+            //     container.innerHTML = svg.content;
+            //     container.style.border = "1px solid #ddd";
+            //     container.style.margin = "10px";
+            //     document.body.appendChild(container);
+            // });
         }
     });
 
