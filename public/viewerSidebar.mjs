@@ -102,7 +102,7 @@ document.getElementById("search").addEventListener("click", function first() {
         // Optional: check event.origin to verify sender
         if (event.data?.type === "SVG_DATA") {
             console.log("Received SVGs:", event.data.payload);
-
+            window.svgData.push(...event.data.payload);
             event.data.payload.forEach(svg => {
                 const container = document.createElement("div");
                 container.innerHTML = svg.content;
