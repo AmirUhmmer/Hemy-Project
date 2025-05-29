@@ -87,8 +87,8 @@ class PencilButton extends Autodesk.Viewing.Extension {
           window.markupsExt.createMarkupSheet();
         }
         // Enter edit mode **********************************************************************************************************
-        window.markupsExt.loadMarkups(window.svgData[0].content, 'custom-layer');
-        window.markupsExt.enterEditMode('custom-layer');
+        window.markupsExt.loadMarkups(window.svgData[0].content);
+        window.markupsExt.enterEditMode();
 
         setTimeout(() => {
           try {
