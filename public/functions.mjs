@@ -284,7 +284,8 @@ class ShapeButton extends Autodesk.Viewing.Extension {
           window.markupsExt.createMarkupSheet();
         }
 
-        window.markupsExt.enterEditMode();
+        window.markupsExt.loadMarkups(window.svgData[0].content, "markupLayer1");
+        window.markupsExt.enterEditMode("markupLayer1");
 
         setTimeout(() => {
           try {
