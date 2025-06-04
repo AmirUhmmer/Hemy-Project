@@ -65,34 +65,64 @@ class PencilButton extends Autodesk.Viewing.Extension {
   }
 
   createButton() {
-    this.button = new Autodesk.Viewing.UI.Button("PencilButton");
-    this.button.setToolTip("Toggle Something");
+    const TOOLBAR_GROUP_ID = "markupsTools";
+    const BUTTON_ID = "PencilButton";
+    const EDIT_LAYER = "markups-svg";
+    const TOGGLED_ICON = "url(./images/pencil-toggled.svg)";
+    const DEFAULT_ICON = "url(./images/pencil.svg)";
+
+    this.markupsLoaded = false;
+    this.toggled = false;
+
+    // Helper: force flex styling on the markup toolbar
+    const applyToolbarStyle = () => {
+      const group = this.viewer.toolbar.getControl(TOOLBAR_GROUP_ID);
+      if (group?.container) {
+        group.container.style.display = "flex";
+        group.container.style.flexDirection = "column";
+        group.container.style.alignItems = "flex-start";
+      }
+    };
+
+    // Create button
+    this.button = new Autodesk.Viewing.UI.Button(BUTTON_ID);
+    this.button.setToolTip("Toggle Markup Tool");
     this.button.setIcon("url(./images/faro.svg)");
 
     this.button.onClick = () => {
-      this.group = this.viewer.toolbar.getControl("markupsTools");
-      this.group.container.style.display = "flex";
       this.toggled = !this.toggled;
       console.log("Toggled:", this.toggled);
+
+      // Update button UI
       this.button.container.classList.toggle("active");
       this.button.container.style.backgroundImage = this.toggled
-        ? "url(./images/pencil-toggled.svg)"
-        : "url(./images/pencil.svg)";
+        ? TOGGLED_ICON
+        : DEFAULT_ICON;
 
       if (this.toggled) {
-        // Create markup sheet if needed
-        this.group = this.viewer.toolbar.getControl("markupsTools");
-        this.group.container.style.display = "flex";
+        // Show Markups extension UI
         if (!window.markupsExt.markups) {
           window.markupsExt.createMarkupSheet();
         }
-        // Enter edit mode **********************************************************************************************************
-        window.markupsExt.loadMarkups(window.svgData[0].content, "markups-svg", () => {
-            console.log("Markup layer loaded");
-            window.markupsExt.enterEditMode("markups-svg");
-        });
+        window.markupsExt.show();
 
+        const hasSvg = window.svgData?.[0]?.content;
+        if (hasSvg) {
+          window.markupsExt.loadMarkups(window.svgData[0].content, EDIT_LAYER);
+          this.markupsLoaded = true;
+        } else {
+          const existingLayers = window.markupsExt.getAvailableMarkupLayers();
+          if (!existingLayers.includes(EDIT_LAYER)) {
+            window.markupsExt.markups.addMarkupLayer(EDIT_LAYER);
+          }
+        }
 
+        window.markupsExt.enterEditMode(EDIT_LAYER);
+
+        // Re-apply styling after Autodesk resets DOM
+        setTimeout(applyToolbarStyle, 300);
+
+        // Change to freehand tool
         setTimeout(() => {
           try {
             const rectTool =
@@ -100,7 +130,6 @@ class PencilButton extends Autodesk.Viewing.Extension {
                 window.markupsExt
               );
             window.markupsExt.changeEditMode(rectTool);
-
             Autodesk.Viewing.Extensions.Markups.Core.Utils.showLmvToolsAndPanels(
               window.viewerInstance
             );
@@ -110,37 +139,45 @@ class PencilButton extends Autodesk.Viewing.Extension {
         }, 200);
       } else {
         window.markupsExt.leaveEditMode();
+        window.markupsExt.hide();
+
+        // Re-apply toolbar styles when exiting edit mode
+        setTimeout(applyToolbarStyle, 300);
       }
     };
 
-    // Use a toolbar group to contain the button
-    let toolbar = this.viewer.getToolbar();
-    this.group = this.viewer.toolbar.getControl("markupsTools");
+    // Create toolbar group if it doesn't exist
+    const toolbar = this.viewer.getToolbar();
+    this.group = this.viewer.toolbar.getControl(TOOLBAR_GROUP_ID);
     if (!this.group) {
-      this.group = new Autodesk.Viewing.UI.ControlGroup("markupsTools");
+      this.group = new Autodesk.Viewing.UI.ControlGroup(TOOLBAR_GROUP_ID);
       toolbar.addControl(this.group);
-      console.log("added pencil button");
+      console.log("Added pencil button");
     }
     this.group.addControl(this.button);
 
-    // Place this group absolutely at the far right and center it vertically
-    this.group.container.style.position = "absolute";
-    this.group.container.style.right = "10px";
-    this.group.container.style.top = "-50vh";
-    this.group.container.style.display = "flex";
-    this.group.container.style.flexDirection = "column";
-    this.group.container.style.alignItems = "flex-start";
-    this.group.container.style.zIndex = "10000"; // Make sure it's above markup UI
-    this.group.container.style.pointerEvents = "auto"; // Ensure it can receive clicks
-    // Style the button
-    // toggled color -- #004eeb  #fffafa
-    // not toggled color -- #fffafa
-    this.button.container.style.backgroundImage = "url(./images/pencil.svg)";
-    this.button.container.style.backgroundSize = "contain";
-    this.button.container.style.backgroundRepeat = "no-repeat";
-    this.button.container.style.backgroundPosition = "center";
-    this.button.container.style.backgroundSize = "25px"; // Adjust size of the background image
-    // this.button.container.style.top = '-50vh';           // Adjust the top position as needed
+    // Initial style setup for toolbar group
+    Object.assign(this.group.container.style, {
+      position: "absolute",
+      right: "10px",
+      top: "-50vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-start",
+      zIndex: "10000",
+      pointerEvents: "auto",
+    });
+
+    // Button styling
+    Object.assign(this.button.container.style, {
+      backgroundImage: DEFAULT_ICON,
+      backgroundSize: "25px",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+    });
+
+    // Apply flex styling in case Autodesk viewer delayed loading
+    setTimeout(applyToolbarStyle, 300);
   }
 }
 
@@ -166,30 +203,65 @@ class TextButton extends Autodesk.Viewing.Extension {
     return true;
   }
 
-  createButton() {
-    this.button = new Autodesk.Viewing.UI.Button("TextButton");
-    this.button.setToolTip("Text Markup");
+createButton() {
+    const TOOLBAR_GROUP_ID = "markupsTools";
+    const BUTTON_ID = "TextButton";
+    const EDIT_LAYER = "markups-svg";
+    const TOGGLED_ICON = "url(./images/text-toggled.svg)";
+    const DEFAULT_ICON = "url(./images/text.svg)";
+
+    this.markupsLoaded = false;
+    this.toggled = false;
+
+    // Helper: force flex styling on the markup toolbar
+    const applyToolbarStyle = () => {
+      const group = this.viewer.toolbar.getControl(TOOLBAR_GROUP_ID);
+      if (group?.container) {
+        group.container.style.display = "flex";
+        group.container.style.flexDirection = "column";
+        group.container.style.alignItems = "flex-start";
+      }
+    };
+
+    // Create button
+    this.button = new Autodesk.Viewing.UI.Button(BUTTON_ID);
+    this.button.setToolTip("Toggle Markup Tool");
+    this.button.setIcon("url(./images/faro.svg)");
 
     this.button.onClick = () => {
-      this.group = this.viewer.toolbar.getControl("markupsTools");
-      this.group.container.style.display = "flex";
       this.toggled = !this.toggled;
       console.log("Toggled:", this.toggled);
+
+      // Update button UI
       this.button.container.classList.toggle("active");
       this.button.container.style.backgroundImage = this.toggled
-        ? "url(./images/text-toggled.svg)"
-        : "url(./images/text.svg)";
+        ? TOGGLED_ICON
+        : DEFAULT_ICON;
 
       if (this.toggled) {
-        this.group = this.viewer.toolbar.getControl("markupsTools");
-        this.group.container.style.display = "flex";
-        // Create markup sheet if needed
+        // Show Markups extension UI
         if (!window.markupsExt.markups) {
           window.markupsExt.createMarkupSheet();
         }
+        window.markupsExt.show();
 
-        window.markupsExt.enterEditMode();
+        const hasSvg = window.svgData?.[0]?.content;
+        if (hasSvg) {
+          window.markupsExt.loadMarkups(window.svgData[0].content, EDIT_LAYER);
+          this.markupsLoaded = true;
+        } else {
+          const existingLayers = window.markupsExt.getAvailableMarkupLayers();
+          if (!existingLayers.includes(EDIT_LAYER)) {
+            window.markupsExt.markups.addMarkupLayer(EDIT_LAYER);
+          }
+        }
 
+        window.markupsExt.enterEditMode(EDIT_LAYER);
+
+        // Re-apply styling after Autodesk resets DOM
+        setTimeout(applyToolbarStyle, 300);
+
+        // Change to freehand tool
         setTimeout(() => {
           try {
             const rectTool =
@@ -197,7 +269,6 @@ class TextButton extends Autodesk.Viewing.Extension {
                 window.markupsExt
               );
             window.markupsExt.changeEditMode(rectTool);
-
             Autodesk.Viewing.Extensions.Markups.Core.Utils.showLmvToolsAndPanels(
               window.viewerInstance
             );
@@ -207,43 +278,47 @@ class TextButton extends Autodesk.Viewing.Extension {
         }, 200);
       } else {
         window.markupsExt.leaveEditMode();
+        window.markupsExt.hide();
+
+        // Re-apply toolbar styles when exiting edit mode
+        setTimeout(applyToolbarStyle, 300);
       }
     };
 
-    // Use a toolbar group to contain the button
-    let toolbar = this.viewer.getToolbar();
-    this.group = this.viewer.toolbar.getControl("markupsTools");
+    // Create toolbar group if it doesn't exist
+    const toolbar = this.viewer.getToolbar();
+    this.group = this.viewer.toolbar.getControl(TOOLBAR_GROUP_ID);
     if (!this.group) {
-      this.group = new Autodesk.Viewing.UI.ControlGroup("markupsTools");
+      this.group = new Autodesk.Viewing.UI.ControlGroup(TOOLBAR_GROUP_ID);
       toolbar.addControl(this.group);
-      console.log("added text button");
+      console.log("Added text button");
     }
     this.group.addControl(this.button);
 
-    // Place this group absolutely at the far right and center it vertically
-    this.group.container.style.position = "absolute";
-    this.group.container.style.right = "10px";
-    this.group.container.style.top = "-50vh";
-    this.group.container.style.display = "flex";
-    this.group.container.style.flexDirection = "column";
-    this.group.container.style.alignItems = "flex-start";
-    this.group.container.style.zIndex = "10000"; // Make sure it's above markup UI
-    this.group.container.style.pointerEvents = "auto"; // Ensure it can receive clicks
-    // Style the button
-    // toggled color -- #004eeb  #fffafa
-    // not toggled color -- #fffafa
-    this.button.container.style.backgroundImage = "url(./images/text.svg)";
-    this.button.container.style.backgroundSize = "contain";
-    this.button.container.style.backgroundRepeat = "no-repeat";
-    this.button.container.style.backgroundPosition = "center";
-    this.button.container.style.backgroundSize = "25px"; // Adjust size of the background image
+    // Initial style setup for toolbar group
+    Object.assign(this.group.container.style, {
+      position: "absolute",
+      right: "10px",
+      top: "-50vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-start",
+      zIndex: "10000",
+      pointerEvents: "auto",
+    });
+
+    // Button styling
+    Object.assign(this.button.container.style, {
+      backgroundImage: DEFAULT_ICON,
+      backgroundSize: "25px",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+    });
+
+    // Apply flex styling in case Autodesk viewer delayed loading
+    setTimeout(applyToolbarStyle, 300);
   }
 }
-
-
-
-
-
 
 // ***************** SHAPE BUTTON *****************
 
@@ -267,29 +342,65 @@ class ShapeButton extends Autodesk.Viewing.Extension {
     return true;
   }
 
-  createButton() {
-    this.button = new Autodesk.Viewing.UI.Button("ShapeButton");
-    this.button.setToolTip("Shape Markup");
+createButton() {
+    const TOOLBAR_GROUP_ID = "markupsTools";
+    const BUTTON_ID = "ShapeButton";
+    const EDIT_LAYER = "markups-svg";
+    const TOGGLED_ICON = "url(./images/shapes-toggled.svg)";
+    const DEFAULT_ICON = "url(./images/shapes.svg)";
+
+    this.markupsLoaded = false;
+    this.toggled = false;
+
+    // Helper: force flex styling on the markup toolbar
+    const applyToolbarStyle = () => {
+      const group = this.viewer.toolbar.getControl(TOOLBAR_GROUP_ID);
+      if (group?.container) {
+        group.container.style.display = "flex";
+        group.container.style.flexDirection = "column";
+        group.container.style.alignItems = "flex-start";
+      }
+    };
+
+    // Create button
+    this.button = new Autodesk.Viewing.UI.Button(BUTTON_ID);
+    this.button.setToolTip("Toggle Markup Tool");
+    this.button.setIcon("url(./images/faro.svg)");
 
     this.button.onClick = () => {
-      this.group = this.viewer.toolbar.getControl("markupsTools");
-      this.group.container.style.display = "flex";
       this.toggled = !this.toggled;
       console.log("Toggled:", this.toggled);
+
+      // Update button UI
       this.button.container.classList.toggle("active");
       this.button.container.style.backgroundImage = this.toggled
-        ? "url(./images/shapes-toggled.svg)"
-        : "url(./images/shapes.svg)";
+        ? TOGGLED_ICON
+        : DEFAULT_ICON;
 
       if (this.toggled) {
-        // Create markup sheet if needed
+        // Show Markups extension UI
         if (!window.markupsExt.markups) {
           window.markupsExt.createMarkupSheet();
         }
+        window.markupsExt.show();
 
-        window.markupsExt.loadMarkups(window.svgData[0].content, "markupLayer1");
-        window.markupsExt.enterEditMode("markupLayer1");
+        const hasSvg = window.svgData?.[0]?.content;
+        if (hasSvg) {
+          window.markupsExt.loadMarkups(window.svgData[0].content, EDIT_LAYER);
+          this.markupsLoaded = true;
+        } else {
+          const existingLayers = window.markupsExt.getAvailableMarkupLayers();
+          if (!existingLayers.includes(EDIT_LAYER)) {
+            window.markupsExt.markups.addMarkupLayer(EDIT_LAYER);
+          }
+        }
 
+        window.markupsExt.enterEditMode(EDIT_LAYER);
+
+        // Re-apply styling after Autodesk resets DOM
+        setTimeout(applyToolbarStyle, 300);
+
+        // Change to freehand tool
         setTimeout(() => {
           try {
             const rectTool =
@@ -297,7 +408,6 @@ class ShapeButton extends Autodesk.Viewing.Extension {
                 window.markupsExt
               );
             window.markupsExt.changeEditMode(rectTool);
-
             Autodesk.Viewing.Extensions.Markups.Core.Utils.showLmvToolsAndPanels(
               window.viewerInstance
             );
@@ -307,36 +417,45 @@ class ShapeButton extends Autodesk.Viewing.Extension {
         }, 200);
       } else {
         window.markupsExt.leaveEditMode();
+        window.markupsExt.hide();
+
+        // Re-apply toolbar styles when exiting edit mode
+        setTimeout(applyToolbarStyle, 300);
       }
     };
 
-    // Use a toolbar group to contain the button
-    let toolbar = this.viewer.getToolbar();
-    this.group = this.viewer.toolbar.getControl("markupsTools");
+    // Create toolbar group if it doesn't exist
+    const toolbar = this.viewer.getToolbar();
+    this.group = this.viewer.toolbar.getControl(TOOLBAR_GROUP_ID);
     if (!this.group) {
-      this.group = new Autodesk.Viewing.UI.ControlGroup("markupsTools");
+      this.group = new Autodesk.Viewing.UI.ControlGroup(TOOLBAR_GROUP_ID);
       toolbar.addControl(this.group);
-      console.log("added shapes button");
+      console.log("Added pencil button");
     }
     this.group.addControl(this.button);
 
-    // Place this group absolutely at the far right and center it vertically
-    this.group.container.style.position = "absolute";
-    this.group.container.style.right = "10px";
-    this.group.container.style.top = "-50vh";
-    this.group.container.style.display = "flex";
-    this.group.container.style.flexDirection = "column";
-    this.group.container.style.alignItems = "flex-start";
-    this.group.container.style.zIndex = "10000"; // Make sure it's above markup UI
-    this.group.container.style.pointerEvents = "auto"; // Ensure it can receive clicks
-    // Style the button
-    // toggled color -- #004eeb  #fffafa
-    // not toggled color -- #fffafa
-    this.button.container.style.backgroundImage = "url(./images/shapes.svg)";
-    this.button.container.style.backgroundSize = "contain";
-    this.button.container.style.backgroundRepeat = "no-repeat";
-    this.button.container.style.backgroundPosition = "center";
-    this.button.container.style.backgroundSize = "25px"; // Adjust size of the background image
+    // Initial style setup for toolbar group
+    Object.assign(this.group.container.style, {
+      position: "absolute",
+      right: "10px",
+      top: "-50vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-start",
+      zIndex: "10000",
+      pointerEvents: "auto",
+    });
+
+    // Button styling
+    Object.assign(this.button.container.style, {
+      backgroundImage: DEFAULT_ICON,
+      backgroundSize: "25px",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+    });
+
+    // Apply flex styling in case Autodesk viewer delayed loading
+    setTimeout(applyToolbarStyle, 300);
   }
 }
 
@@ -383,15 +502,22 @@ class SaveButton extends Autodesk.Viewing.Extension {
       let queryString = window.location.search.substring(1);
       let queryParts = queryString.split("&");
       for (let i = 0; i < queryParts.length; i++) {
-          let param = queryParts[i].split("=");
-          params[decodeURIComponent(param[0])] = decodeURIComponent(param[1]);
-      };
+        let param = queryParts[i].split("=");
+        params[decodeURIComponent(param[0])] = decodeURIComponent(param[1]);
+      }
       let projectid = params["projectid"];
-      const response = await fetch('https://prod-189.westeurope.logic.azure.com:443/workflows/648f7d062b8f4fb7bb200fb9a0cd7ca4/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0TJSRQdgZwnOnfxsrHgpuqeNJK5s1zkrx-4mctfQJ9U', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urn: urn, data: markupData, projectid: projectid })
-      });
+      const response = await fetch(
+        "https://prod-189.westeurope.logic.azure.com:443/workflows/648f7d062b8f4fb7bb200fb9a0cd7ca4/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0TJSRQdgZwnOnfxsrHgpuqeNJK5s1zkrx-4mctfQJ9U",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            urn: urn,
+            data: markupData,
+            projectid: projectid,
+          }),
+        }
+      );
       console.log(urn);
       console.log(markupData);
     };
@@ -441,7 +567,6 @@ Autodesk.Viewing.theExtensionManager.registerExtension(
   "SaveButton",
   SaveButton
 );
-
 
 // class FileBarPanel extends Autodesk.Viewing.UI.DockingPanel {
 //   constructor(viewer, id, title) {
