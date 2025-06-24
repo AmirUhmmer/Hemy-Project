@@ -159,10 +159,12 @@ class PencilButton extends Autodesk.Viewing.Extension {
         }
         window.markupsExt.show();
 
-        const seedUrn = this.viewer.model.getSeedUrn();
+        //const seedUrn = this.viewer.model.getSeedUrn();
+        let guid = window.viewerInstance.model.getDocumentNode();
 
         // Find the SVG that matches the current model URN
-        const matchingSvg = window.svgData?.find(svg => svg.name === seedUrn);
+        const matchingSvg = window.svgData?.find(svg => svg.name === guid);
+        
 
         if (matchingSvg?.content) {
           window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
@@ -299,10 +301,11 @@ createButton() {
         }
         window.markupsExt.show();
 
-        const seedUrn = this.viewer.model.getSeedUrn();
+        //const seedUrn = this.viewer.model.getSeedUrn();
+        let guid = window.viewerInstance.model.getDocumentNode();
 
         // Find the SVG that matches the current model URN
-        const matchingSvg = window.svgData?.find(svg => svg.name === seedUrn);
+        const matchingSvg = window.svgData?.find(svg => svg.name === guid);
 
         if (matchingSvg?.content) {
           window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
@@ -440,8 +443,11 @@ createButton() {
 
         const seedUrn = this.viewer.model.getSeedUrn();
 
+        //const seedUrn = this.viewer.model.getSeedUrn();
+        let guid = window.viewerInstance.model.getDocumentNode();
+
         // Find the SVG that matches the current model URN
-        const matchingSvg = window.svgData?.find(svg => svg.name === seedUrn);
+        const matchingSvg = window.svgData?.find(svg => svg.name === guid);
 
         if (matchingSvg?.content) {
           window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
