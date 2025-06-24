@@ -163,7 +163,7 @@ class PencilButton extends Autodesk.Viewing.Extension {
         let guid = window.viewerInstance.model.getDocumentNode();
 
         // Find the SVG that matches the current model URN
-        const matchingSvg = window.svgData?.find(svg => svg.name === guid);
+        const matchingSvg = window.svgData?.find(svg => svg.name === guid.data.guid);
         
 
         if (matchingSvg?.content) {
@@ -305,7 +305,7 @@ createButton() {
         let guid = window.viewerInstance.model.getDocumentNode();
 
         // Find the SVG that matches the current model URN
-        const matchingSvg = window.svgData?.find(svg => svg.name === guid);
+        const matchingSvg = window.svgData?.find(svg => svg.name === guid.data.guid);
 
         if (matchingSvg?.content) {
           window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
@@ -447,7 +447,7 @@ createButton() {
         let guid = window.viewerInstance.model.getDocumentNode();
 
         // Find the SVG that matches the current model URN
-        const matchingSvg = window.svgData?.find(svg => svg.name === guid);
+       const matchingSvg = window.svgData?.find(svg => svg.name === guid.data.guid);
 
         if (matchingSvg?.content) {
           window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
