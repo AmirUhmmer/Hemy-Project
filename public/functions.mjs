@@ -573,7 +573,7 @@ class SaveButton extends Autodesk.Viewing.Extension {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            urn: guid,
+            urn: guid.data.guid,
             data: markupData,
             projectid: projectid,
           }),
