@@ -65,16 +65,43 @@ export function initViewer(container) {
 // ******************************* WORKING ************************
 
 export function loadModel(viewer, urn) {
-    function onDocumentLoadSuccess(doc) {
-        const loaded = viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
-        if (loaded){
-            functions.toolbarButtons(viewer);
-            
+    async function onDocumentLoadSuccess(doc) {
+        const defaultViewable = doc.getRoot().getDefaultGeometry();
+
+        if (!defaultViewable) {
+            console.error("No default geometry found in document.");
+            return;
+        }
+
+        const role = defaultViewable.data.role; // '2d' or '3d'
+        console.log("Viewable role:", role);
+
+        const loaded = await viewer.loadDocumentNode(doc, defaultViewable);
+        if (loaded) {
+            if (role === '2d') {
+                functions.toolbarButtons(viewer);
+            } else {
+                // Optional: Do something for 3D
+            }
         }
     }
+
     function onDocumentLoadFailure(code, message) {
-        //alert('Could not load model. See console for more details.');
-        //console.error(message);
+        console.error("Failed to load document:", message);
     }
+
     Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+}
+
+// Move outside so it's not recreated every time
+function waitForToolbar(viewer, callback) {
+    if (viewer.toolbar) {
+        callback();
+    } else {
+        viewer.addEventListener(Autodesk.Viewing.TOOLBAR_CREATED_EVENT, function onToolbarCreated() {
+            viewer.removeEventListener(Autodesk.Viewing.TOOLBAR_CREATED_EVENT, onToolbarCreated);
+            callback();
+            console.log('Toolbar created, executing callback.');
+        });
+    }
 }

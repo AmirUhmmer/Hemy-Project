@@ -1,10 +1,53 @@
 export function toolbarButtons(viewer) {
-  viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () {
-    let models = window.viewerInstance.impl.modelQueue().getModels();
-    let urn = models[0].getDocumentNode().getDefaultGeometry().children[1]
-      .data.urn; // Get the URN of the first model
-    const modelUrn = urn.split("fs.file:")[1].split("/")[0];
-    window.modelUrn = modelUrn;
+  // viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () {
+  //   console.log("Geometry loaded, setting up toolbar buttons");
+  //   let models = window.viewerInstance.impl.modelQueue().getModels();
+  //   let urn = models[0].getDocumentNode().getDefaultGeometry().children[1]
+  //     .data.urn; // Get the URN of the first model
+  //   const modelUrn = urn.split("fs.file:")[1].split("/")[0];
+  //   window.modelUrn = modelUrn;
+
+  //   viewer
+  //     .loadExtension("Autodesk.Viewing.MarkupsCore")
+  //     .then(function (markupsExt) {
+  //       console.log("MarkupsCore loaded");
+  //       window.markupsExt = markupsExt;
+
+  //       // Now load your toolbar button extension — markupsExt guaranteed ready!
+  //       window.viewerInstance.loadExtension("PencilButton");
+  //       window.viewerInstance.loadExtension("ShapeButton");
+  //       window.viewerInstance.loadExtension("TextButton");
+  //       window.viewerInstance.loadExtension("SaveButton");
+  //     });
+
+  //   viewer.unloadExtension("Autodesk.Explode");
+  //   const modelTools = viewer.toolbar.getControl("modelTools");
+  //   const navTools = viewer.toolbar.getControl("navTools");
+
+  //   const measureTools = viewer.toolbar.getControl("measureTools");
+  //   viewer.loadExtension("Autodesk.Viewing.ZoomWindow");
+  //   //navTools.removeControl('toolbar-zoomTool');
+
+  //   const settingsTools = viewer.toolbar.getControl("settingsTools");
+  //   settingsTools.removeControl("toolbar-modelStructureTool");
+
+  //   document.getElementById("preview").style.width = "97%";
+  //   document.getElementById("sidebar").style.visibility = "hidden";
+  //   document.getElementById("viewerSidebar").style.visibility = "visible";
+  //   // window.viewerInstance.loadExtension('RightSideToggleButton');
+
+  //   setTimeout(() => {
+  //     viewer.resize();
+  //     viewer.fitToView();
+  //   }, 300);
+  // });
+
+     console.log("Geometry loaded, setting up toolbar buttons");
+    // let models = window.viewerInstance.impl.modelQueue().getModels();
+    // let urn = models[0].getDocumentNode().getDefaultGeometry().children[1]
+    //   .data.urn; // Get the URN of the first model
+    // const modelUrn = urn.split("fs.file:")[1].split("/")[0];
+    // window.modelUrn = modelUrn;
 
     viewer
       .loadExtension("Autodesk.Viewing.MarkupsCore")
@@ -39,7 +82,6 @@ export function toolbarButtons(viewer) {
       viewer.resize();
       viewer.fitToView();
     }, 300);
-  });
 }
 
 // ******************** TOOLBAR BUTTONS ********************
@@ -53,9 +95,20 @@ class PencilButton extends Autodesk.Viewing.Extension {
   }
 
   load() {
-    this.createButton();
+    // If toolbar already exists, create the button immediately
+    if (this.viewer.toolbar) {
+      this.createButton();
+    } else {
+      // Wait for toolbar to be created
+      this.viewer.addEventListener(
+        Autodesk.Viewing.TOOLBAR_CREATED_EVENT,
+        () => this.createButton()
+      );
+    }
+
     return true;
   }
+
 
   unload() {
     if (this.group) {
@@ -106,18 +159,19 @@ class PencilButton extends Autodesk.Viewing.Extension {
         }
         window.markupsExt.show();
 
-        const hasSvg = window.svgData?.[0]?.content;
-        if (hasSvg) {
-          window.markupsExt.loadMarkups(window.svgData[0].content, EDIT_LAYER);
+        const seedUrn = this.viewer.model.getSeedUrn();
+
+        // Find the SVG that matches the current model URN
+        const matchingSvg = window.svgData?.find(svg => svg.name === seedUrn);
+
+        if (matchingSvg?.content) {
+          window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
           this.markupsLoaded = true;
+          window.markupsExt.enterEditMode(EDIT_LAYER);
         } else {
-          const existingLayers = window.markupsExt.getAvailableMarkupLayers();
-          if (!existingLayers.includes(EDIT_LAYER)) {
-            window.markupsExt.markups.addMarkupLayer(EDIT_LAYER);
-          }
+          window.markupsExt.enterEditMode();
         }
 
-        window.markupsExt.enterEditMode(EDIT_LAYER);
 
         // Re-apply styling after Autodesk resets DOM
         setTimeout(applyToolbarStyle, 300);
@@ -245,18 +299,18 @@ createButton() {
         }
         window.markupsExt.show();
 
-        const hasSvg = window.svgData?.[0]?.content;
-        if (hasSvg) {
-          window.markupsExt.loadMarkups(window.svgData[0].content, EDIT_LAYER);
-          this.markupsLoaded = true;
-        } else {
-          const existingLayers = window.markupsExt.getAvailableMarkupLayers();
-          if (!existingLayers.includes(EDIT_LAYER)) {
-            window.markupsExt.markups.addMarkupLayer(EDIT_LAYER);
-          }
-        }
+        const seedUrn = this.viewer.model.getSeedUrn();
 
-        window.markupsExt.enterEditMode(EDIT_LAYER);
+        // Find the SVG that matches the current model URN
+        const matchingSvg = window.svgData?.find(svg => svg.name === seedUrn);
+
+        if (matchingSvg?.content) {
+          window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
+          this.markupsLoaded = true;
+          window.markupsExt.enterEditMode(EDIT_LAYER);
+        } else {
+          window.markupsExt.enterEditMode();
+        }
 
         // Re-apply styling after Autodesk resets DOM
         setTimeout(applyToolbarStyle, 300);
@@ -384,18 +438,18 @@ createButton() {
         }
         window.markupsExt.show();
 
-        const hasSvg = window.svgData?.[0]?.content;
-        if (hasSvg) {
-          window.markupsExt.loadMarkups(window.svgData[0].content, EDIT_LAYER);
-          this.markupsLoaded = true;
-        } else {
-          const existingLayers = window.markupsExt.getAvailableMarkupLayers();
-          if (!existingLayers.includes(EDIT_LAYER)) {
-            window.markupsExt.markups.addMarkupLayer(EDIT_LAYER);
-          }
-        }
+        const seedUrn = this.viewer.model.getSeedUrn();
 
-        window.markupsExt.enterEditMode(EDIT_LAYER);
+        // Find the SVG that matches the current model URN
+        const matchingSvg = window.svgData?.find(svg => svg.name === seedUrn);
+
+        if (matchingSvg?.content) {
+          window.markupsExt.loadMarkups(matchingSvg.content, EDIT_LAYER);
+          this.markupsLoaded = true;
+          window.markupsExt.enterEditMode(EDIT_LAYER);
+        } else {
+          window.markupsExt.enterEditMode();
+        }
 
         // Re-apply styling after Autodesk resets DOM
         setTimeout(applyToolbarStyle, 300);
@@ -497,7 +551,8 @@ class SaveButton extends Autodesk.Viewing.Extension {
       this.toggled = !this.toggled;
       console.log("Saved:", this.toggled);
       let markupData = window.markupsExt.generateData();
-      let urn = window.viewerInstance.model.getSeedUrn();
+      // let urn = window.viewerInstance.model.getSeedUrn();
+      let guid = window.viewerInstance.model.getDocumentNode();
       let params = {};
       let queryString = window.location.search.substring(1);
       let queryParts = queryString.split("&");
@@ -507,19 +562,20 @@ class SaveButton extends Autodesk.Viewing.Extension {
       }
       let projectid = params["projectid"];
       const response = await fetch(
-        "https://prod-189.westeurope.logic.azure.com:443/workflows/648f7d062b8f4fb7bb200fb9a0cd7ca4/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0TJSRQdgZwnOnfxsrHgpuqeNJK5s1zkrx-4mctfQJ9U",
+        "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9d8ffc5594bd4d5d959994f7cf1eea33/triggers/manual/paths/invoke/?api-version=1&tenantId=tId&environmentName=304525ba-25f2-ef18-86aa-9d4e4cba5254&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=h19csKA1x0q2oI3GdheN3-BtnouIIIfZW-NB5oyHaSc",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            urn: urn,
+            urn: guid,
             data: markupData,
             projectid: projectid,
           }),
         }
       );
-      console.log(urn);
-      console.log(markupData);
+      
+      console.log(guid.data.guid);
+      // console.log(markupData);
     };
 
     // Use a toolbar group to contain the button
