@@ -79,9 +79,9 @@ export function loadModel(viewer, urn) {
         const loaded = await viewer.loadDocumentNode(doc, defaultViewable);
         if (loaded) {
             if (role === '2d') {
-                functions.toolbarButtons(viewer);
+                functions.toolbarButtons2D(viewer);
             } else {
-                // Optional: Do something for 3D
+                functions.sidebarButtons3D(viewer);
             }
         }
     }

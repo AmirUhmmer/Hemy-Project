@@ -117,9 +117,11 @@ document.getElementById("search").addEventListener("click", function first() {
 // ------------------ EVENTS ------------------
 
 function sheetsPanel() {
-  // window.markupsExt.enterEditMode();
-  // window.markupsExt.show();
-  // window.markupsExt.setEditMode("Freehand"); // Other modes: 'Arrow', 'Cloud', 'Rectangle', 'Ellipse', 'Freehand'
+
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const filesPanel = document.getElementById("sidebar");
+  modelBrowserPanel.style.visibility = "hidden";
+  filesPanel.style.visibility = "hidden";
 
   const panel = document.getElementById("sheetsPanel");
   const isVisible = panel.style.visibility === "visible";
@@ -280,6 +282,11 @@ function sheetsPanel() {
 
 
 function filesPanel() {
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const sheetsPanel = document.getElementById("sheetsPanel");
+  modelBrowserPanel.style.visibility = "hidden";
+  sheetsPanel.style.visibility = "hidden";
+
   const viewer = window.viewerInstance;
   const model = viewer.impl.modelQueue().getModels()[0];
 
@@ -309,6 +316,12 @@ function filesPanel() {
 
 
 function modelBrowserPanel() {
+
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const filesPanel = document.getElementById("sidebar");
+  modelBrowserPanel.style.visibility = "hidden";
+  filesPanel.style.visibility = "hidden";
+
   const panel = document.getElementById("model-browser-panel");
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";

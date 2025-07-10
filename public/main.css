@@ -158,7 +158,7 @@ html {
   scrollbar-color: #555 #2c2c2c; /* Thumb color #555 and track color #2c2c2c */
 }
 
-#sheetsPanel {
+#sheetsPanel, .fileUploadPanel {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;

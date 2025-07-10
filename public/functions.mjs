@@ -1,4 +1,4 @@
-export function toolbarButtons(viewer) {
+export function toolbarButtons2D(viewer) {
   // viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function () {
   //   console.log("Geometry loaded, setting up toolbar buttons");
   //   let models = window.viewerInstance.impl.modelQueue().getModels();
@@ -82,6 +82,36 @@ export function toolbarButtons(viewer) {
       viewer.resize();
       viewer.fitToView();
     }, 300);
+}
+
+
+
+
+
+
+
+export function sidebarButtons3D(viewer) {
+  console.log("Geometry loaded, setting up sidebar buttons");
+
+  viewer.unloadExtension("Autodesk.Explode");
+  const modelTools = viewer.toolbar.getControl("modelTools");
+  const navTools = viewer.toolbar.getControl("navTools");
+
+  const measureTools = viewer.toolbar.getControl("measureTools");
+  viewer.loadExtension("Autodesk.Viewing.ZoomWindow");
+  //navTools.removeControl('toolbar-zoomTool');
+
+  const settingsTools = viewer.toolbar.getControl("settingsTools");
+  settingsTools.removeControl("toolbar-modelStructureTool");
+
+  document.getElementById("preview").style.width = "97%";
+  document.getElementById("sidebar").style.visibility = "hidden";
+  document.getElementById("viewerSidebar").style.visibility = "visible";
+
+  setTimeout(() => {
+    viewer.resize();
+    viewer.fitToView();
+  }, 300);
 }
 
 // ******************** TOOLBAR BUTTONS ********************

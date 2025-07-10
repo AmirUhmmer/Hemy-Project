@@ -47,55 +47,74 @@ router.get('/api/auth/callback', authCallbackMiddleware, (req, res) => {
     `);
 });
 
-router.get('/api/auth/token', async (req, res) => {
-    try {
-        const response = await Axios({
-            method: 'POST',
-            url: 'https://developer.api.autodesk.com/authentication/v2/token',
-            headers: {
-                'content-type': 'application/x-www-form-urlencoded',
-                // 'Accept': 'application/json',
-                // 'Authorization': `Basic SERuVXlvcDFCcjZoS2dGa1BGTWZka3JOY1k4MTFpTTc1OUJFQ2hwWWtmZVVaM3JyOkJoRzdNaG1FMjdka1RuY3ZiRjFGOFlMd09wRllxT3I0aTN2ak9zUWpwVVplUGkzdnBhMW1VcTNHNlgwdjdLUHA=`,
-                'x-user-id': '3a15881a-370e-4d72-80f7-8701c4b1806c'
-            },
-            data: querystring.stringify({
-                client_id: APS_CLIENT_ID,
-                client_secret: APS_CLIENT_SECRET,
-                grant_type: 'client_credentials',
-                scope: 'data:read data:write account:read viewables:read',
-            })
-        });
+// router.get('/api/auth/token', async (req, res) => {
+//     try {
+//         const response = await Axios({
+//             method: 'POST',
+//             url: 'https://developer.api.autodesk.com/authentication/v2/token',
+//             headers: {
+//                 'content-type': 'application/x-www-form-urlencoded',
+//                 // 'Accept': 'application/json',
+//                 // 'Authorization': `Basic SERuVXlvcDFCcjZoS2dGa1BGTWZka3JOY1k4MTFpTTc1OUJFQ2hwWWtmZVVaM3JyOkJoRzdNaG1FMjdka1RuY3ZiRjFGOFlMd09wRllxT3I0aTN2ak9zUWpwVVplUGkzdnBhMW1VcTNHNlgwdjdLUHA=`,
+//                 'x-user-id': '3a15881a-370e-4d72-80f7-8701c4b1806c'
+//             },
+//             data: querystring.stringify({
+//                 client_id: APS_CLIENT_ID,
+//                 client_secret: APS_CLIENT_SECRET,
+//                 grant_type: 'client_credentials',
+//                 scope: 'data:read data:write account:read viewables:read',
+//             })
+//         });
 
-        if (response.status === 200 && response.data.access_token) {
-            res.json({
-                access_token: response.data.access_token,
-                refresh_token: response.data.access_token,
-                expires_in: response.data.expires_in,
-                internal_token: response.data.access_token
-            });
-        } else {
-            console.error('Authentication failed, invalid response:', response.data);
-            res.status(400).json({ error: 'Failed to authenticate: Invalid response from API' });
-        }
+//         if (response.status === 200 && response.data.access_token) {
+//             res.json({
+//                 access_token: response.data.access_token,
+//                 refresh_token: response.data.access_token,
+//                 expires_in: response.data.expires_in,
+//                 internal_token: response.data.access_token
+//             });
+//         } else {
+//             console.error('Authentication failed, invalid response:', response.data);
+//             res.status(400).json({ error: 'Failed to authenticate: Invalid response from API' });
+//         }
 
-    } catch (error) {
-        // Log detailed error for debugging
-        console.error('Error during authentication:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
-    }
+//     } catch (error) {
+//         // Log detailed error for debugging
+//         console.error('Error during authentication:', error.response?.data || error.message);
+//         res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
+//     }
+// });
+
+// router.get('/api/auth/profile', async function (req, res, next) {
+//     try {
+//         const authToken = req.headers.authorization?.split(' ')[1]; // Extract token from headers
+//         // const profile = await getUserProfile(authToken);
+//         // res.json({ name: `${profile.name}` });
+//         res.json({ name: authToken });
+//     } catch (err) {
+//         next('ERROR: ' + err);
+//     }
+//     // try {
+//     //     const profile = await getUserProfile(req.internalOAuthToken.access_token);
+//     //     res.json({ name: `${profile.name}` });
+//     // } catch (err) {
+//     //     next(err);
+//     // }
+// });
+
+
+router.get('/api/auth/token', authRefreshMiddleware, function (req, res) {
+    res.json(req.publicOAuthToken);
 });
 
-router.get('/api/auth/profile', async function (req, res, next) {
+router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res, next) {
     try {
-        const authToken = req.headers.authorization?.split(' ')[1]; // Extract token from headers
-        // const profile = await getUserProfile(authToken);
-        // res.json({ name: `${profile.name}` });
-        res.json({ name: authToken });
+        const profile = await getUserProfile(req.internalOAuthToken.access_token);
+        res.json({ name: `${profile.name}` });
     } catch (err) {
-        next('ERROR: ' + err);
+        next(err);
     }
 });
-
 
 
 
