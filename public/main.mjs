@@ -98,6 +98,18 @@ import { initTree } from './sidebar.mjs';
 const login = document.getElementById('login');
 
 async function initApp() {
+    const authToken = localStorage.getItem('authToken');
+    const expiresAt = localStorage.getItem('expires_at');
+
+    // Check if token exists and is still valid
+    if (authToken && expiresAt && new Date().getTime() < parseInt(expiresAt)) {
+        console.log("✅ Using stored token");
+        console.log("🔑 Auth Token:", authToken);
+        await startApp();
+        return;
+    }
+
+    // Try server-side session check
     try {
         const resp = await fetch("/api/auth/profile", {
             method: "GET",
@@ -110,30 +122,22 @@ async function initApp() {
             login.onclick = () => window.location.replace("/api/auth/logout");
             login.style.visibility = 'visible';
 
-            const viewer = await initViewer(document.getElementById("preview"));
-            initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
+            await startApp();
         } else if (resp.status === 401) {
-            // Automatically start login flow
+            // Start login flow
             const loginWindow = window.open("/api/auth/login", "Login", "width=600,height=600");
 
             window.addEventListener("message", async (event) => {
                 if (event.origin !== window.location.origin) return;
-                console.log("Received message from login window:", event.data);
+
+                console.log("🔑 Received login token:", event.data);
 
                 localStorage.setItem('authToken', event.data.token);
                 localStorage.setItem('refreshToken', event.data.refreshToken);
                 localStorage.setItem('expires_at', event.data.expires_at);
                 localStorage.setItem('internal_token', event.data.internal_token);
 
-                let authToken = event.data.token;
-                let refreshToken = event.data.refreshToken;
-                let expires_at = event.data.expires_at;
-                let internal_token = event.data.internal_token;
-                
-                let hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';  // Hub ID
-
-                const viewer = await initViewer(document.getElementById('preview'));
-                initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
+                await startApp();
             });
         } else {
             throw new Error(`Unexpected status: ${resp.status}`);
@@ -142,6 +146,11 @@ async function initApp() {
         alert("Could not initialize the application. See console for more details.");
         console.error(err);
     }
+}
+
+async function startApp() {
+    const viewer = await initViewer(document.getElementById("preview"));
+    initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
 }
 
 initApp();

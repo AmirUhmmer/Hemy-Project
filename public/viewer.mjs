@@ -42,10 +42,6 @@ export function initViewer(container) {
             viewer.setQualityLevel(true, true);
             // console.log(accessToken);
 
-            viewer.loadExtension('Autodesk.DataVisualization').then(() => {
-                console.log('Autodesk.DataVisualization loaded.');
-            });
-
             viewer.loadExtension('Autodesk.AEC.LevelsExtension').then((levelsExt) => {
                 console.log('Autodesk.AEC.LevelsExtension loaded.');
                 
@@ -82,6 +78,9 @@ export function loadModel(viewer, urn) {
                 functions.toolbarButtons2D(viewer);
             } else {
                 functions.sidebarButtons3D(viewer);
+                viewer.model.getSeedUrn();
+                const decodedUrn = atob(urn.replace(/_/g, '/').replace(/-/g, '+'));
+                console.log("Decoded URN:", decodedUrn);
             }
         }
     }

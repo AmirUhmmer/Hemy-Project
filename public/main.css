@@ -158,7 +158,7 @@ html {
   scrollbar-color: #555 #2c2c2c; /* Thumb color #555 and track color #2c2c2c */
 }
 
-#sheetsPanel, .fileUploadPanel {
+#sheetsPanel, .file-upload {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -420,4 +420,123 @@ html {
     z-index: 10000;
     pointer-events: auto;
     display: flex !important;
+}
+
+
+.file-upload, .issues, .issues-details {
+  font-family: ArtifaktElement;
+  visibility: hidden;
+  position: fixed;
+  top: 0;
+  left: 3%;
+  width: 25%;
+  height: 100vh;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: hidden; /* Prevent outer scrollbars */
+}
+
+/* Hide native file input */
+.hidden-file-input {
+  display: none;
+}
+
+/* Custom file input label */
+.custom-file-label {
+  display: inline-block;
+  padding: 10px 16px;
+  background-color: #f0f0f0;
+  color: #333;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.custom-file-label:hover {
+  background-color: #e2e2e2;
+}
+
+/* Upload button */
+.modern-upload-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modern-upload-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Optional spacing for layout */
+.file-upload-content, .issue-reporting-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.issue-reporting-content input,
+.issue-reporting-content textarea {
+  font-family: inherit;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.issue-reporting-content input:focus,
+.issue-reporting-content textarea:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  background-color: #fff;
+}
+
+.issue-reporting-content textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.save-issue-btn {
+  background-color: #0a7720;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-issue-btn:hover {
+  background-color: #09611a;
+}
+
+.cancel-btn {
+  background-color: #ec3a3a;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #be2f2f;
 }

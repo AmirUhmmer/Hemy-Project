@@ -27,6 +27,12 @@ document.getElementById("files").addEventListener("click", filesPanel);
 document
   .getElementById("model-browser")
   .addEventListener("click", modelBrowserPanel);
+document
+  .getElementById("upload-files")
+  .addEventListener("click", fileUploadPanel);
+document
+  .getElementById("issues")
+  .addEventListener("click", createIssuePanel);
 
 document.getElementById("filter").addEventListener("keydown", function (event) {
   window.viewerInstance.search(
@@ -97,27 +103,301 @@ document.getElementById("search").addEventListener("click", function first() {
   );
 });
 
-    window.svgData = window.svgData || [];
+const fileInput = document.getElementById("upload-input");
+const fileLabel = document.querySelector(".custom-file-label");
 
-    window.addEventListener("message", (event) => {
-        // Optional: check event.origin to verify sender
-        if (event.data?.type === "SVG_DATA") {
-            console.log("Received SVGs:", event.data.payload);
-            window.svgData.push(...event.data.payload);
-            // event.data.payload.forEach(svg => {
-            //     const container = document.createElement("div");
-            //     container.innerHTML = svg.content;
-            //     container.style.border = "1px solid #ddd";
-            //     container.style.margin = "10px";
-            //     document.body.appendChild(container);
-            // });
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    fileLabel.textContent = fileInput.files[0].name;
+  } else {
+    fileLabel.textContent = "Choose a file";
+  }
+});
+
+
+
+document.getElementById("upload-btn").onclick = async () => {
+  const fileInput = document.getElementById("upload-input");
+
+  if (!fileInput.files.length) return alert("Select a file");
+
+
+  const filename = fileInput.files[0].name;
+
+  const projectId = 'b.29ab0ff3-ee12-4af6-b0a3-590ba4bc0ddf';
+  const folderUrn = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    // Step 1: Ask server to create storage
+    const initRes = await fetch('/api/acc/upload/initiate', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ filename, projectId, folderUrn, authToken })
+    });
+
+
+
+    if (!initRes.ok) throw new Error("Storage creation failed");
+    const { bucketKey, objectKey, objectUrn } = await initRes.json();
+    const parts = objectUrn.split(':');
+    const bucketKeyCorrected = parts[parts.length - 1].split('/')[0];
+    console.log("Storage created:", { bucketKey, objectKey, objectUrn });
+    // Step 2: Get signed URL for S3 upload
+    const signedUrlRes = await fetch(`/api/acc/upload/signed-url?bucketKey=${bucketKeyCorrected}&objectKey=${objectKey}`, {
+      method: 'GET',
+      credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
         }
     });
+
+    if (!signedUrlRes.ok) throw new Error("Failed to get signed URL");
+    const { urls, uploadKey } = await signedUrlRes.json();
+    const signedUrl = urls[0]; // There's only 1 in your case
+
+    const urlObj = new URL(signedUrl);
+    const params = urlObj.searchParams;
+
+    const uploadId = params.get("uploadId");
+    const xAmzSecurityToken = params.get("X-Amz-Security-Token");
+    const xAmzCredential = params.get("X-Amz-Credential");
+    const xAmzSignature = params.get("X-Amz-Signature");
+
+    // console.log("uploadKey:", uploadKey);
+    // console.log("uploadId:", uploadId);
+    // console.log("X-Amz-Security-Token:", xAmzSecurityToken);
+    // console.log("X-Amz-Credential:", xAmzCredential);
+    // console.log("X-Amz-Signature:", xAmzSignature);
+
+
+    const fileInput = document.getElementById("upload-input");
+    const file = fileInput.files[0];
+    if (!file) return alert("No file selected");
+
+    // Send to backend
+    const uploadResp = await fetch('/api/acc/upload/execute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileType: file.type,
+        fileData: await file.arrayBuffer(), // Convert file to ArrayBuffer
+        signedUrl,
+      }),
+    });
+
+
+
+    if (!uploadResp.ok) throw new Error("Direct S3 upload failed");
+
+    // Step 4: Finalize the upload
+    const finalizeRes = await fetch('/api/acc/upload/finalize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ bucketKey, objectKey, uploadKey })
+    });
+
+    if (!finalizeRes.ok) throw new Error("Finalize failed");
+
+    alert("Upload complete!");
+  } catch (err) {
+    console.error("Upload error:", err);
+    alert("Upload failed: " + err.message);
+  }
+};
+
+
+
+// document.getElementById("upload-btn").onclick = async () => {
+//   const fileInput = document.getElementById("upload-input");
+//   if (!fileInput.files.length) return alert("Select a file");
+
+//   const file = fileInput.files[0];
+//   const projectId = 'b.29ab0ff3-ee12-4af6-b0a3-590ba4bc0ddf';
+//   const folderId = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
+//   const fileName = file.name;
+//   const token = localStorage.getItem('authToken');
+
+//   try {
+//     // 1. Initiate upload
+//     const res = await fetch('/api/acc/upload/initiate', {
+//       method: 'POST',
+//       credentials: 'include',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${token}`
+//       },
+//       body: JSON.stringify({ fileName, projectId, folderId, token })
+//     });
+
+//     if (!res.ok) {
+//       const errorText = await res.text();
+//       console.error("❌ Initiate failed:", res.status, errorText);
+//       alert("Upload init failed: " + res.status);
+//       return;
+//     }
+
+//     const { uploadParams, storageId } = await res.json();
+
+//     // 2. Upload to S3 (if available)
+//     if (uploadParams) {
+//       const formData = new FormData();
+//       Object.entries(uploadParams.fields).forEach(([k, v]) => formData.append(k, v));
+//       formData.append("file", file);
+
+//       const uploadResp = await fetch(uploadParams.url, {
+//         method: 'POST',
+//         body: formData
+//       });
+
+//       if (!uploadResp.ok) throw new Error("S3 upload failed");
+//       console.log("✅ File uploaded to S3");
+//     } else {
+//       console.warn("⚠️ Skipping S3 upload: `uploadParams` missing. Continuing to finalize.");
+//     }
+
+//     // 3. Finalize upload in ACC
+//     const finalize = await fetch('/api/acc/upload/finalize', {
+//       method: 'POST',
+//       credentials: 'include',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${token}`
+//       },
+//       body: JSON.stringify({ fileName, projectId, folderId, storageId })
+//     });
+
+//     if (finalize.ok) {
+//       alert("✅ Upload complete!");
+//     } else {
+//       console.error(await finalize.text());
+//       alert("❌ Finalize failed");
+//     }
+//   } catch (err) {
+//     console.error("🚨 Upload failed", err);
+//     alert("Upload error: " + err.message);
+//   }
+// };
+
+
+
+document.getElementById("create-issue-btn").onclick = async () => { 
+  const viewer = window.viewerInstance;
+  const panel = document.getElementById("issue-panel");
+  panel.style.visibility = "hidden";
+  document.getElementById("preview").style.width = "97%"
+
+  setTimeout(() => {
+    window.viewerInstance.resize();
+    window.viewerInstance.fitToView();
+  }, 300);
+
+
+  const pushpin_ext = await viewer.loadExtension(
+    "Autodesk.BIM360.Extension.PushPin"
+  );
+
+  pushpin_ext.startCreateItem({
+    label: "New Issue",
+    status: "open",
+    type: "issues",
+  });
+
+  pushpin_ext.pushPinManager.addEventListener('pushpin.created', function (e) {
+    const pushpinId = e.value?.itemData?.id;
+
+    if (pushpinId) {
+      pushpin_ext.endCreateItem();
+      pushpin_ext.setDraggableById(pushpinId, true);
+    }
+
+    const issuePanel = document.getElementById("issue-details-panel");
+    issuePanel.style.visibility = "visible";
+    document.getElementById("preview").style.width = "72%"
+    setTimeout(() => {
+      window.viewerInstance.resize();
+      window.viewerInstance.fitToView();
+    }, 300);
+
+
+    document.getElementById("save-issue-btn").onclick = async () => { 
+      const issue = pushpin_ext.getItemById(pushpinId);
+      const model = viewer.impl.modelQueue().getModels()[0];
+      const seedUrn = model.getSeedUrn(); // base64 URN
+      const decodedUrn = atob(seedUrn.replace(/_/g, '/').replace(/-/g, '+'));
+      const versionNumber = decodedUrn.split('version=')[1];
+      // const selNode = getSelectedNodeData();
+      const loadedDocument = viewer.model.getDocumentNode();
+
+      const payload = {
+        title: document.getElementById("issue-title").value,
+        status: 'open',
+        issueSubtypeId: "e931d7af-e1fd-42d0-a1f5-6b570cf0c26f",
+        linkedDocuments: [
+          {
+            type: 'TwoDVectorPushpin',
+            urn: seedUrn,
+            createdAtVersion: Number(versionNumber),
+            details: {
+              viewable: {
+                name: loadedDocument.data.name,
+                guid: loadedDocument.data.guid,
+                is3D: loadedDocument.data.role == '3d',
+                viewableId: loadedDocument.data.viewableID
+              },
+              externalId: issue.externalId,
+              position: issue.position,
+              objectId: issue.objectId,
+              viewerState: issue.viewerState
+            }
+          }
+        ]
+      };
+
+      if (payload){
+        const response = await fetch(`https://developer.api.autodesk.com/project/v1/projects/${projectId}/versions/${versionId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          }
+        });
+      }
+    }
+  });
+};
+
+
+
+
+
+window.svgData = window.svgData || [];
+
+window.addEventListener("message", (event) => {
+  // Optional: check event.origin to verify sender
+  if (event.data?.type === "SVG_DATA") {
+    console.log("Received SVGs:", event.data.payload);
+    window.svgData.push(...event.data.payload);
+    // event.data.payload.forEach(svg => {
+    //     const container = document.createElement("div");
+    //     container.innerHTML = svg.content;
+    //     container.style.border = "1px solid #ddd";
+    //     container.style.margin = "10px";
+    //     document.body.appendChild(container);
+    // });
+  }
+});
 
 // ------------------ EVENTS ------------------
 
 function sheetsPanel() {
-
   const modelBrowserPanel = document.getElementById("model-browser-panel");
   const filesPanel = document.getElementById("sidebar");
   modelBrowserPanel.style.visibility = "hidden";
@@ -129,7 +409,6 @@ function sheetsPanel() {
   panel.style.visibility = isVisible
     ? (document.getElementById("preview").style.width = "97%")
     : (document.getElementById("preview").style.width = "72%");
-
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -276,11 +555,6 @@ function sheetsPanel() {
   }
 }
 
-
-
-
-
-
 function filesPanel() {
   const modelBrowserPanel = document.getElementById("model-browser-panel");
   const sheetsPanel = document.getElementById("sheetsPanel");
@@ -299,24 +573,13 @@ function filesPanel() {
     : (preview.style.width = "72%");
   document.getElementById("sidebar").style.left = "3%";
 
-
-    
   setTimeout(() => {
     viewer.resize();
     viewer.fitToView();
   }, 300);
 }
 
-
-
-
-
-
-
-
-
 function modelBrowserPanel() {
-
   const modelBrowserPanel = document.getElementById("model-browser-panel");
   const filesPanel = document.getElementById("sidebar");
   modelBrowserPanel.style.visibility = "hidden";
@@ -328,7 +591,6 @@ function modelBrowserPanel() {
   panel.style.visibility = isVisible
     ? (document.getElementById("preview").style.width = "97%")
     : (document.getElementById("preview").style.width = "72%");
-
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -402,90 +664,43 @@ function modelBrowserPanel() {
   }
 }
 
-// function modelBrowserPanel() {
-//   const panel = document.getElementById('model-browser-panel');
-//   const isVisible = panel.style.visibility === 'visible';
-//   panel.style.visibility = isVisible ? 'hidden' : 'visible';
+function fileUploadPanel() {
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const filesPanel = document.getElementById("sidebar");
+  modelBrowserPanel.style.visibility = "hidden";
+  filesPanel.style.visibility = "hidden";
 
-//   const viewer = window.viewerInstance;
-//   const model = viewer.impl.modelQueue().getModels()[0];
-//   const instanceTree = model.getData().instanceTree;
-//   const rootId = instanceTree.getRootId();
-//   const categorizedDbIds = {};
+  const panel = document.getElementById("file-upload-panel");
+  const isVisible = panel.style.visibility === "visible";
+  panel.style.visibility = isVisible ? "hidden" : "visible";
+  panel.style.visibility = isVisible
+    ? (document.getElementById("preview").style.width = "97%")
+    : (document.getElementById("preview").style.width = "72%");
 
-//   // Clear existing tree
-//   const treeContainer = document.querySelector('.tree');
-//   treeContainer.innerHTML = '';
+  setTimeout(() => {
+    window.viewerInstance.resize();
+    window.viewerInstance.fitToView();
+  }, 300);
+}
 
-//   // Recursive function to collect all dbIds
-//   function collectDbIds(dbId, dbIds) {
-//     dbIds.push(dbId);
-//     instanceTree.enumNodeChildren(dbId, (childId) => {
-//       collectDbIds(childId, dbIds);
-//     });
-//   }
 
-//   const allDbIds = [];
-//   collectDbIds(rootId, allDbIds);
+async function createIssuePanel() {
+  const viewer = window.viewerInstance;
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const filesPanel = document.getElementById("sidebar");
+  modelBrowserPanel.style.visibility = "hidden";
+  filesPanel.style.visibility = "hidden";
 
-//   let processed = 0;
+  const panel = document.getElementById("issue-panel");
+  const isVisible = panel.style.visibility === "visible";
+  panel.style.visibility = isVisible ? "hidden" : "visible";
+  panel.style.visibility = isVisible
+    ? (document.getElementById("preview").style.width = "97%")
+    : (document.getElementById("preview").style.width = "72%");
 
-//   allDbIds.forEach((dbId) => {
-//     viewer.getProperties(dbId, (props) => {
-//       const category = props.name || 'Unknown';
+  setTimeout(() => {
+    window.viewerInstance.resize();
+    window.viewerInstance.fitToView();
+  }, 300);
 
-//       if (!categorizedDbIds[category]) {
-//         categorizedDbIds[category] = [];
-//       }
-
-//       categorizedDbIds[category].push({
-//         dbId,
-//         properties: props.properties
-//       });
-
-//       processed++;
-
-//       // When all dbIds are processed, build the tree
-//       if (processed === allDbIds.length) {
-//         treeContainer.innerHTML = ''; // Clear again to avoid duplicates
-
-//         for (const [categoryName, items] of Object.entries(categorizedDbIds)) {
-//           const parentId = categoryName.toLowerCase().replace(/\s+/g, '-');
-
-//           const parentDiv = document.createElement('div');
-//           parentDiv.className = 'tree-item parent';
-//           parentDiv.dataset.id = parentId;
-//           parentDiv.innerHTML = `
-//             <span class="expand">▸</span>
-//             <span class="eye">👁️</span>
-//             ${categoryName}
-//           `;
-
-//           const childrenDiv = document.createElement('div');
-//           childrenDiv.className = 'children';
-//           childrenDiv.dataset.parent = parentId;
-
-//           items.forEach(({ dbId, properties }) => {
-//             const childDiv = document.createElement('div');
-//             childDiv.className = 'tree-item';
-//             childDiv.innerHTML = `
-//               <span class="expand"></span>
-//               <span class="eye">👁️</span>
-//               dbId: ${dbId}
-//             `;
-
-//             // Optional: Add property details to tooltip or expandable section
-//             childDiv.title = properties
-//               .map(p => `${p.displayName}: ${p.displayValue}`)
-//               .join('\n');
-
-//             childrenDiv.appendChild(childDiv);
-//           });
-
-//           treeContainer.appendChild(parentDiv);
-//           treeContainer.appendChild(childrenDiv);
-//         }
-//       }
-//     });
-//   });
-// }
+}

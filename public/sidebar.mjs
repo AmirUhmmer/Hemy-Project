@@ -28,12 +28,12 @@ async function getJSON(url) {
             'x-internal-token': internal_token       // Send internal_token in a custom header
         }
     });
-    if (!resp.ok) {
-        fetchAccessToken();
-        alert('Could not load tree data. See console for more details.');
-        console.error(await resp.text());
-        // return [];
-    }
+    // if (!resp.ok) {
+    //     fetchAccessToken();
+    //     alert('Could not load tree data. See console for more details.');
+    //     console.error(await resp.text());
+    //     // return [];
+    // }
     return resp.json();
 }
 

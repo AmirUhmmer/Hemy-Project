@@ -10,17 +10,38 @@ const service = module.exports = {};
 
 service.getAuthorizationUrl = () => authenticationClient.authorize(APS_CLIENT_ID, ResponseType.Code, APS_CALLBACK_URL, [
     Scopes.DataRead,
+    Scopes.DataWrite,
     Scopes.DataCreate,
-    Scopes.ViewablesRead
+    Scopes.BucketRead,
+    Scopes.BucketCreate,
+    Scopes.ViewablesRead,
+    Scopes.AccountRead
 ]);
 
 service.authCallbackMiddleware = async (req, res, next) => {
     const internalCredentials = await authenticationClient.getThreeLeggedToken(APS_CLIENT_ID, req.query.code, APS_CALLBACK_URL, {
-        clientSecret: APS_CLIENT_SECRET
+        clientSecret: APS_CLIENT_SECRET,
+        scopes: [
+            Scopes.DataRead,
+            Scopes.DataWrite,
+            Scopes.DataCreate,
+            Scopes.BucketRead,
+            Scopes.BucketCreate,
+            Scopes.ViewablesRead,
+            Scopes.AccountRead
+        ]
     });
     const publicCredentials = await authenticationClient.refreshToken(internalCredentials.refresh_token, APS_CLIENT_ID, {
         clientSecret: APS_CLIENT_SECRET,
-        scopes: [Scopes.ViewablesRead]
+        scopes: [
+            Scopes.DataRead,
+            Scopes.DataWrite,
+            Scopes.DataCreate,
+            Scopes.BucketRead,
+            Scopes.BucketCreate,
+            Scopes.ViewablesRead,
+            Scopes.AccountRead
+        ]
     });
     req.session.public_token = publicCredentials.access_token;
     req.session.internal_token = internalCredentials.access_token;

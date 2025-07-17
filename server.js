@@ -8,6 +8,8 @@ const path = require('path');
 
 let app = express();
 
+app.use(express.json());
+
 // Setting cookies in your Express app
 app.use(session({
     secret: SERVER_SESSION_SECRET,
