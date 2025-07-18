@@ -74,7 +74,7 @@ export function toolbarButtons2D(viewer) {
     settingsTools.removeControl("toolbar-modelStructureTool");
 
     document.getElementById("preview").style.width = "97%";
-    document.getElementById("sidebar").style.visibility = "hidden";
+    document.getElementById("fileContainer").style.visibility = "hidden";
     document.getElementById("viewerSidebar").style.visibility = "visible";
     // window.viewerInstance.loadExtension('RightSideToggleButton');
 
@@ -105,7 +105,7 @@ export function sidebarButtons3D(viewer) {
   settingsTools.removeControl("toolbar-modelStructureTool");
 
   document.getElementById("preview").style.width = "97%";
-  document.getElementById("sidebar").style.visibility = "hidden";
+  document.getElementById("fileContainer").style.visibility = "hidden";
   document.getElementById("viewerSidebar").style.visibility = "visible";
 
   setTimeout(() => {

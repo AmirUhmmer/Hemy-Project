@@ -131,13 +131,27 @@ export function initTree(selector, onSelectionChanged) {
         }
     });
 
-    tree.on('node.click', function (event, node) {
-        event.preventTreeDefault();
-        const tokens = node.id.split('|');
-        if (tokens[0] === 'version') {
-            onSelectionChanged(tokens[1]); // version ID
-        }
-    });
+    // tree.on('node.click', function (event, node) {
+    //     event.preventTreeDefault();
+    //     const tokens = node.id.split('|');
+    //     if (tokens[0] === 'version') {
+    //         onSelectionChanged(tokens[1]); // version ID
+    //     }
+    // });
+
+tree.on('node.click', function (event, node) {
+  event.preventTreeDefault();
+  const tokens = node.id.split('|');
+
+  if (tokens[0] === 'version') {
+    onSelectionChanged(tokens[1]);
+
+    // Show preview panel (optional toggle)
+    document.getElementById('preview').classList.add('active');
+  }
+});
+
+
 
     return new InspireTreeDOM(tree, { target: selector });
 }

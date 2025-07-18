@@ -284,6 +284,36 @@ router.post('/api/data', (req, res) => {
 
 
 
+// POST /api/acc/upload/folderUrn
+router.post('/api/acc/upload/folderUrn', async (req, res) => {
+  const { projectId } = req.body; // e.g. 'image.jpg', folder URN, project ID
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1]; // Extract token after "Bearer "
+
+  const hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';
+
+  console.log("Initiating upload with:", { projectId, authToken });
+
+  if (!authToken) return res.status(401).json({ message: 'Missing auth token' });
+
+  const response = await fetch(`https://developer.api.autodesk.com/project/v1/hubs/${hubId}/projects/${projectId}/topFolders`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${authToken}`
+    },
+  });
+
+
+  const data = await response.json();
+
+  const projectFilesFolder = data.data.find(f => f.attributes.name === 'Project Files');
+  const folderId = projectFilesFolder?.id;
+
+  console.log('Folder ID:', folderId);
+
+  res.json({ folderId });
+  // console.log("Folders:", data);
+});
 
 
 // POST /api/acc/upload/initiate
@@ -370,30 +400,33 @@ router.get('/api/acc/upload/signed-url', async (req, res) => {
 
 
 
-router.post('/api/acc/upload/execute', async (req, res) => {
-  try {
-    const { signedUrl, fileData } = req.body;
-    if (!signedUrl || !fileData) {
-      return res.status(400).json({ error: "Missing signedUrl or fileData" });
-    }
 
-    // Upload the file to S3 using the signed URL
+
+
+
+router.post('/api/acc/upload/execute', async (req, res) => {
+  const { signedUrl, base64File } = req.body;
+  if (!signedUrl || !base64File)
+    return res.status(400).json({ error: "Missing signedUrl or base64File" });
+
+  try {
+    const fileBuffer = Buffer.from(base64File, 'base64');
+
     const response = await fetch(signedUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/octet-stream',
       },
-      body: Buffer.from(fileData),
+      body: fileBuffer,
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('S3 Upload failed:', errorText);
-      return res.status(500).json({ error: 'S3 Upload failed', details: errorText });
+      const errText = await response.text();
+      console.error("Direct S3 upload failed:", errText);
+      return res.status(500).json({ error: 'Direct S3 upload failed', details: errText });
     }
 
-    res.status(200).json({ message: 'Upload succeeded' });
-
+    res.status(200).json({ message: 'Upload success' });
   } catch (err) {
     console.error("Upload error:", err);
     res.status(500).json({ error: 'Upload failed', details: err.message });
@@ -406,13 +439,19 @@ router.post('/api/acc/upload/execute', async (req, res) => {
 
 
 
+
 // POST /api/acc/upload/finalize
 router.post('/api/acc/upload/finalize', async (req, res) => {
-  const { bucketKey, objectKey, uploadKey } = req.body;
-    const authHeader = req.headers.authorization;
+  const { bucketKeyCorrected, objectKey, uploadKey, projectId, folderUrn, filename } = req.body;
+  const authHeader = req.headers.authorization;
   const authToken = authHeader?.split(' ')[1];
+  console.log("Finalizing upload with:", { bucketKeyCorrected, objectKey, uploadKey, authToken });
 
-  const response = await fetch(`https://developer.api.autodesk.com/oss/v2/buckets/${bucketKey}/objects/${objectKey}/signeds3upload`, {
+  if (!authToken)
+    return res.status(400).json({ message: "Missing uploadUrn or auth token" });
+
+  // 1. Finalize the upload
+  const finalizeRes = await fetch(`https://developer.api.autodesk.com/oss/v2/buckets/${bucketKeyCorrected}/objects/${objectKey}/signeds3upload`, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${authToken}`,
@@ -421,14 +460,82 @@ router.post('/api/acc/upload/finalize', async (req, res) => {
     body: JSON.stringify({ uploadKey })
   });
 
-  const data = await response.json();
-  if (!response.ok) {
-    console.error("Finalize failed:", data);
-    return res.status(500).json(data);
+  const finalizeData = await finalizeRes.json();
+  console.log("Finalize response:", finalizeData);
+
+  if (!finalizeRes.ok) {
+    console.error("Finalize failed:", finalizeData);
+    return res.status(500).json(finalizeData);
   }
 
-  res.json(data);
+  // 2. Create Item and first Version in ACC
+  const objectId = `urn:adsk.objects:os.object:${bucketKeyCorrected}/${objectKey}`;
+  const createItemRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/items`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${authToken}`,
+      "Content-Type": "application/vnd.api+json",
+      "Accept": "application/vnd.api+json"
+    },
+    body: JSON.stringify({
+      jsonapi: { version: "1.0" },
+      data: {
+        type: "items",
+        attributes: {
+          filename,
+          extension: {
+            type: "items:autodesk.bim360:File",
+            version: "1.0"
+          }
+        },
+        relationships: {
+          tip: {
+            data: {
+              type: "versions",
+              id: "1"
+            }
+          },
+          parent: {
+            data: {
+              type: "folders",
+              id: folderUrn
+            }
+          }
+        }
+      },
+      included: [
+        {
+          type: "versions",
+          id: "1",
+          attributes: {
+            name: filename,
+            extension: {
+              type: "versions:autodesk.bim360:File",
+              version: "1.0"
+            }
+          },
+          relationships: {
+            storage: {
+              data: {
+                type: "objects",
+                id: objectId
+              }
+            }
+          }
+        }
+      ]
+    })
+  });
+
+  const itemData = await createItemRes.json();
+  if (!createItemRes.ok) {
+    console.error("Item creation failed:", itemData);
+    return res.status(500).json(itemData);
+  }
+
+  res.json({ finalized: finalizeData, itemCreated: itemData });
 });
+
 
 
 module.exports = router;

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css" />
   <link rel="stylesheet" href="./main.css" />
-
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
   <title>Hemy Projects</title>
 </head>
 <!-- test main branch -->
@@ -40,9 +40,34 @@
   </div>
   <!----------------------------- VIEWER SIDEBAR ----------------------------->
 
-  <div id="sidebar">
+
+  
+
+
+
+
+  <!----------------------------- FILES ----------------------------->
+  <div id="fileContainer">
+    <div class="file-header">
+      <h2 class="title">Files</h2>
+      <div class="file-actions">
+        <button id="uploadBtn">Upload</button>
+        <input id="searchInput" type="text" placeholder="Search files..." />
+      </div>
+    </div>
     <div id="tree"></div>
   </div>
+
+  <!-- Hidden Preview Panel -->
+  <div id="preview" class="hidden"></div>
+
+  <!----------------------------- FILES ----------------------------->
+
+
+
+
+
+
 
   <!----------------------------- SHEETS PANEL ----------------------------->
   <div id="sheetsPanel">
@@ -211,7 +236,7 @@
   <!----------------------------- ISSUE REPORTING DETAILS ----------------------------->
 
 
-  <div id="preview"></div>
+  <!-- <div id="preview"></div> -->
 
   <script>
     window.USE_OPFS = true;

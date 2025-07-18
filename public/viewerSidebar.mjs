@@ -1,6 +1,8 @@
 const tabs = document.querySelectorAll(".tab");
 const contents = document.querySelectorAll(".tab-content");
 var viewer = window.viewerInstance;
+// const urn = viewer.getSeedUrn();
+// console.log("Model URN:", urn);
 // var models =  window.viewerInstance.impl.modelQueue().getModels()[0];
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -15,6 +17,11 @@ tabs.forEach((tab) => {
 
 document.querySelector(".close-btn").addEventListener("click", () => {
   document.getElementById("sheetsPanel").style.visibility = "hidden";
+  document.getElementById("fileContainer").style.visibility = "hidden";
+  document.getElementById("model-browser-panel").style.visibility = "hidden";
+  document.getElementById("file-upload-panel").style.visibility = "hidden";
+  document.getElementById("issue-panel").style.visibility = "hidden";
+  document.getElementById("issue-details-panel").style.visibility = "hidden";
   preview.style.width = "97%";
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -114,6 +121,19 @@ fileInput.addEventListener("change", () => {
   }
 });
 
+const triggerBtn = document.getElementById('uploadBtn');
+const uploadBtn = document.getElementById('upload-btn');
+
+triggerBtn.addEventListener('click', () => {
+  fileInput.click(); // trigger file picker
+});
+
+// Wait for file to be selected
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length > 0) {
+    uploadBtn.click(); // now trigger upload
+  }
+});
 
 
 document.getElementById("upload-btn").onclick = async () => {
@@ -124,11 +144,33 @@ document.getElementById("upload-btn").onclick = async () => {
 
   const filename = fileInput.files[0].name;
 
-  const projectId = 'b.29ab0ff3-ee12-4af6-b0a3-590ba4bc0ddf';
-  const folderUrn = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
+  let hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';  // static hub ID
+  let params = new URLSearchParams(window.location.search);
+  const projectId = 'b.' + params.get('id');
+
+  // const folderUrn = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
   const authToken = localStorage.getItem('authToken');
 
   try {
+    // Step 0: Get top folder ID
+    const folderRes = await fetch('/api/acc/upload/folderUrn', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ projectId })
+    });
+
+
+
+    if (!folderRes.ok) throw new Error("Storage creation failed");
+    const { folderId } = await folderRes.json();
+
+    const folderUrn = folderId; // Use the folder ID returned from the server
+    console.log("Top folder ID:", folderUrn);
+
     // Step 1: Ask server to create storage
     const initRes = await fetch('/api/acc/upload/initiate', {
       method: 'POST',
@@ -175,21 +217,31 @@ document.getElementById("upload-btn").onclick = async () => {
     // console.log("X-Amz-Signature:", xAmzSignature);
 
 
+    // Convert file to base64
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file); // Will result in data:...base64
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
     const fileInput = document.getElementById("upload-input");
     const file = fileInput.files[0];
     if (!file) return alert("No file selected");
 
-    // Send to backend
+    const base64DataUrl = await toBase64(file);
+    const base64Data = base64DataUrl.split(',')[1]; // Remove 'data:...,' prefix
+
     const uploadResp = await fetch('/api/acc/upload/execute', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        fileName: file.name,
-        fileType: file.type,
-        fileData: await file.arrayBuffer(), // Convert file to ArrayBuffer
         signedUrl,
+        base64File: base64Data,
       }),
     });
 
@@ -200,10 +252,22 @@ document.getElementById("upload-btn").onclick = async () => {
     // Step 4: Finalize the upload
     const finalizeRes = await fetch('/api/acc/upload/finalize', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ bucketKey, objectKey, uploadKey })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        bucketKeyCorrected,
+        objectKey,
+        uploadKey,
+        projectId, // your actual project ID
+        folderUrn, // destination folder
+        filename // user-friendly filename
+      })
     });
+
+
+
 
     if (!finalizeRes.ok) throw new Error("Finalize failed");
 
@@ -399,7 +463,7 @@ window.addEventListener("message", (event) => {
 
 function sheetsPanel() {
   const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("sidebar");
+  const filesPanel = document.getElementById("fileContainer");
   modelBrowserPanel.style.visibility = "hidden";
   filesPanel.style.visibility = "hidden";
 
@@ -564,14 +628,14 @@ function filesPanel() {
   const viewer = window.viewerInstance;
   const model = viewer.impl.modelQueue().getModels()[0];
 
-  const panel = document.getElementById("sidebar");
+  const panel = document.getElementById("fileContainer");
   const preview = document.getElementById("preview");
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
   panel.style.visibility = isVisible
     ? (preview.style.width = "97%")
     : (preview.style.width = "72%");
-  document.getElementById("sidebar").style.left = "3%";
+  document.getElementById("fileContainer").style.left = "3%";
 
   setTimeout(() => {
     viewer.resize();
@@ -581,7 +645,7 @@ function filesPanel() {
 
 function modelBrowserPanel() {
   const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("sidebar");
+  const filesPanel = document.getElementById("fileContainer");
   modelBrowserPanel.style.visibility = "hidden";
   filesPanel.style.visibility = "hidden";
 
@@ -666,7 +730,7 @@ function modelBrowserPanel() {
 
 function fileUploadPanel() {
   const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("sidebar");
+  const filesPanel = document.getElementById("fileContainer");
   modelBrowserPanel.style.visibility = "hidden";
   filesPanel.style.visibility = "hidden";
 
@@ -687,7 +751,7 @@ function fileUploadPanel() {
 async function createIssuePanel() {
   const viewer = window.viewerInstance;
   const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("sidebar");
+  const filesPanel = document.getElementById("fileContainer");
   modelBrowserPanel.style.visibility = "hidden";
   filesPanel.style.visibility = "hidden";
 

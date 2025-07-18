@@ -14,6 +14,7 @@ service.getAuthorizationUrl = () => authenticationClient.authorize(APS_CLIENT_ID
     Scopes.DataCreate,
     Scopes.BucketRead,
     Scopes.BucketCreate,
+    Scopes.BucketUpdate,
     Scopes.ViewablesRead,
     Scopes.AccountRead
 ]);
@@ -27,6 +28,7 @@ service.authCallbackMiddleware = async (req, res, next) => {
             Scopes.DataCreate,
             Scopes.BucketRead,
             Scopes.BucketCreate,
+            Scopes.BucketUpdate,
             Scopes.ViewablesRead,
             Scopes.AccountRead
         ]
@@ -39,6 +41,7 @@ service.authCallbackMiddleware = async (req, res, next) => {
             Scopes.DataCreate,
             Scopes.BucketRead,
             Scopes.BucketCreate,
+            Scopes.BucketUpdate,
             Scopes.ViewablesRead,
             Scopes.AccountRead
         ]
