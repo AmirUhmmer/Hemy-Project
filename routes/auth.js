@@ -445,44 +445,33 @@ router.post('/api/acc/upload/finalize', async (req, res) => {
   const { bucketKeyCorrected, objectKey, uploadKey, projectId, folderUrn, filename } = req.body;
   const authHeader = req.headers.authorization;
   const authToken = authHeader?.split(' ')[1];
-  console.log("Finalizing upload with:", { bucketKeyCorrected, objectKey, uploadKey, authToken });
 
-  if (!authToken)
-    return res.status(400).json({ message: "Missing uploadUrn or auth token" });
+  try {
+    const objectId = `urn:adsk.objects:os.object:${bucketKeyCorrected}/${objectKey}`;
 
-  // 1. Finalize the upload
-  const finalizeRes = await fetch(`https://developer.api.autodesk.com/oss/v2/buckets/${bucketKeyCorrected}/objects/${objectKey}/signeds3upload`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${authToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ uploadKey })
-  });
+    // Step 1: Finalize multipart upload
+    const finalizeRes = await fetch(`https://developer.api.autodesk.com/oss/v2/buckets/${bucketKeyCorrected}/objects/${objectKey}/signeds3upload`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${authToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ uploadKey })
+    });
+    const finalizeData = await finalizeRes.json();
 
-  const finalizeData = await finalizeRes.json();
-  console.log("Finalize response:", finalizeData);
+    if (!finalizeRes.ok) {
+      console.error("Finalize failed:", finalizeData);
+      return res.status(500).json({ error: "Finalize failed", details: finalizeData });
+    }
 
-  if (!finalizeRes.ok) {
-    console.error("Finalize failed:", finalizeData);
-    return res.status(500).json(finalizeData);
-  }
-
-  // 2. Create Item and first Version in ACC
-  const objectId = `urn:adsk.objects:os.object:${bucketKeyCorrected}/${objectKey}`;
-  const createItemRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/items`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${authToken}`,
-      "Content-Type": "application/vnd.api+json",
-      "Accept": "application/vnd.api+json"
-    },
-    body: JSON.stringify({
+    // Step 2: Try to create a new item
+    const itemBody = {
       jsonapi: { version: "1.0" },
       data: {
         type: "items",
         attributes: {
-          filename,
+          displayName: filename,
           extension: {
             type: "items:autodesk.bim360:File",
             version: "1.0"
@@ -503,38 +492,138 @@ router.post('/api/acc/upload/finalize', async (req, res) => {
           }
         }
       },
-      included: [
-        {
-          type: "versions",
-          id: "1",
-          attributes: {
-            name: filename,
-            extension: {
-              type: "versions:autodesk.bim360:File",
-              version: "1.0"
-            }
-          },
-          relationships: {
-            storage: {
-              data: {
-                type: "objects",
-                id: objectId
-              }
+      included: [{
+        type: "versions",
+        id: "1",
+        attributes: {
+          name: filename,
+          extension: {
+            type: "versions:autodesk.bim360:File",
+            version: "1.0"
+          }
+        },
+        relationships: {
+          storage: {
+            data: {
+              type: "objects",
+              id: objectId
             }
           }
         }
-      ]
-    })
-  });
+      }]
+    };
 
-  const itemData = await createItemRes.json();
-  if (!createItemRes.ok) {
-    console.error("Item creation failed:", itemData);
-    return res.status(500).json(itemData);
+    const itemRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/items`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${authToken}`,
+        "Content-Type": "application/vnd.api+json",
+        "Accept": "application/vnd.api+json"
+      },
+      body: JSON.stringify(itemBody)
+    });
+
+    let itemData = await itemRes.json();
+
+    // Step 3: Check if file already exists (409 or error detail)
+    if (!itemRes.ok) {
+      const isFileExists =
+        itemRes.status === 409 ||
+        (itemData?.errors?.[0]?.detail || "").includes("already exists");
+
+      if (isFileExists) {
+        console.log("File exists. Switching to version upload...");
+
+        // Get the existing item's ID
+        const folderContentsRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/folders/${folderUrn}/contents`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/vnd.api+json'
+          }
+        });
+        const folderContents = await folderContentsRes.json();
+
+        const existingItem = folderContents.data.find(item =>
+          item.attributes.displayName === filename
+        );
+
+        if (!existingItem) {
+          return res.status(500).json({ error: "Could not find existing item after create failed." });
+        }
+
+        // Create new version
+        const versionBody = {
+          jsonapi: { version: "1.0" },
+          data: {
+            type: "versions",
+            attributes: {
+              name: filename,
+              extension: {
+                type: "versions:autodesk.bim360:File",
+                version: "1.0"
+              }
+            },
+            relationships: {
+              storage: {
+                data: {
+                  type: "objects",
+                  id: objectId
+                }
+              },
+              item: {
+                data: {
+                  type: "items",
+                  id: existingItem.id
+                }
+              }
+            }
+          }
+        };
+
+        const versionRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/versions`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${authToken}`,
+            "Content-Type": "application/vnd.api+json",
+            "Accept": "application/vnd.api+json"
+          },
+          body: JSON.stringify(versionBody)
+        });
+
+        const versionData = await versionRes.json();
+
+        if (!versionRes.ok) {
+          console.error("Version creation failed:", versionData);
+          return res.status(500).json({ error: "Version creation failed", details: versionData });
+        }
+
+        return res.status(200).json({
+          type: "version",
+          finalized: finalizeData,
+          result: versionData
+        });
+      }
+
+      // If it's not a file-exists error, return original item creation error
+      console.error("Item creation failed:", itemData);
+      return res.status(500).json({ error: "Item creation failed", details: itemData });
+    }
+
+    // ✅ If item was created successfully
+    return res.status(200).json({
+      type: "item",
+      finalized: finalizeData,
+      result: itemData
+    });
+
+  } catch (error) {
+    console.error("Finalize route error:", error);
+    res.status(500).json({ error: "Unexpected error", details: error.message });
   }
-
-  res.json({ finalized: finalizeData, itemCreated: itemData });
 });
+
+
 
 
 

@@ -31,6 +31,59 @@ body.preview-active #fileContainer {
 
 
 
+.notif {
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 14px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  z-index: 1000;
+}
+
+.notif.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notif.hidden {
+  display: none;
+}
+
+
+.notifError {
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  background-color: #d64a4a;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 14px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  z-index: 1000;
+}
+
+.notifError.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notifError.hidden {
+  display: none;
+}
+
+
+
 
 /* Sidebar stays fixed */
 #viewerSidebar {

@@ -151,6 +151,7 @@ document.getElementById("upload-btn").onclick = async () => {
   // const folderUrn = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
   const authToken = localStorage.getItem('authToken');
 
+
   try {
     // Step 0: Get top folder ID
     const folderRes = await fetch('/api/acc/upload/folderUrn', {
@@ -162,16 +163,12 @@ document.getElementById("upload-btn").onclick = async () => {
       },
       body: JSON.stringify({ projectId })
     });
-
-
-
-    if (!folderRes.ok) throw new Error("Storage creation failed");
+  
+    if (!folderRes.ok) throw new Error("Failed to get folder");
     const { folderId } = await folderRes.json();
-
-    const folderUrn = folderId; // Use the folder ID returned from the server
-    console.log("Top folder ID:", folderUrn);
-
-    // Step 1: Ask server to create storage
+    const folderUrn = folderId;
+  
+    // Step 1: Create storage location for file
     const initRes = await fetch('/api/acc/upload/initiate', {
       method: 'POST',
       credentials: 'include',
@@ -181,75 +178,68 @@ document.getElementById("upload-btn").onclick = async () => {
       },
       body: JSON.stringify({ filename, projectId, folderUrn, authToken })
     });
-
-
-
+  
     if (!initRes.ok) throw new Error("Storage creation failed");
     const { bucketKey, objectKey, objectUrn } = await initRes.json();
     const parts = objectUrn.split(':');
     const bucketKeyCorrected = parts[parts.length - 1].split('/')[0];
-    console.log("Storage created:", { bucketKey, objectKey, objectUrn });
-    // Step 2: Get signed URL for S3 upload
+  
+    // Step 2: Get signed S3 URL
     const signedUrlRes = await fetch(`/api/acc/upload/signed-url?bucketKey=${bucketKeyCorrected}&objectKey=${objectKey}`, {
       method: 'GET',
       credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
     });
-
+  
     if (!signedUrlRes.ok) throw new Error("Failed to get signed URL");
     const { urls, uploadKey } = await signedUrlRes.json();
-    const signedUrl = urls[0]; // There's only 1 in your case
-
-    const urlObj = new URL(signedUrl);
-    const params = urlObj.searchParams;
-
-    const uploadId = params.get("uploadId");
-    const xAmzSecurityToken = params.get("X-Amz-Security-Token");
-    const xAmzCredential = params.get("X-Amz-Credential");
-    const xAmzSignature = params.get("X-Amz-Signature");
-
-    // console.log("uploadKey:", uploadKey);
-    // console.log("uploadId:", uploadId);
-    // console.log("X-Amz-Security-Token:", xAmzSecurityToken);
-    // console.log("X-Amz-Credential:", xAmzCredential);
-    // console.log("X-Amz-Signature:", xAmzSignature);
-
-
-    // Convert file to base64
-    function toBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file); // Will result in data:...base64
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-      });
-    }
-
+    const signedUrl = urls[0];
+  
+    // Step 3: Convert file to base64
     const fileInput = document.getElementById("upload-input");
     const file = fileInput.files[0];
     if (!file) return alert("No file selected");
-
-    const base64DataUrl = await toBase64(file);
-    const base64Data = base64DataUrl.split(',')[1]; // Remove 'data:...,' prefix
-
+  
+    const base64DataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+  
+    const base64Data = base64DataUrl.split(',')[1]; // Remove data: prefix
+  
+    // Step 4: Upload file to S3 via signed URL
     const uploadResp = await fetch('/api/acc/upload/execute', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         signedUrl,
-        base64File: base64Data,
-      }),
+        base64File: base64Data
+      })
     });
-
-
-
-    if (!uploadResp.ok) throw new Error("Direct S3 upload failed");
-
-    // Step 4: Finalize the upload
+  
+    if (!uploadResp.ok) throw new Error("Upload to S3 failed");
+  
+    // Step 5: Check if file already exists in folder (by filename)
+    const checkRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/folders/${folderUrn}/contents`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/vnd.api+json'
+      }
+    });
+  
+    if (!checkRes.ok) throw new Error("Failed to check existing items");
+    const folderContents = await checkRes.json();
+    const existingItem = folderContents.data.find(item => item.attributes.displayName === filename);
+  
+    const isUpdate = !!existingItem;
+    const existingItemId = existingItem?.id;
+  
+    // Step 6: Finalize the upload (create item or version)
     const finalizeRes = await fetch('/api/acc/upload/finalize', {
       method: 'POST',
       headers: {
@@ -260,96 +250,21 @@ document.getElementById("upload-btn").onclick = async () => {
         bucketKeyCorrected,
         objectKey,
         uploadKey,
-        projectId, // your actual project ID
-        folderUrn, // destination folder
-        filename // user-friendly filename
+        projectId,
+        folderUrn,
+        filename,
+        isUpdate,
+        existingItemId
       })
     });
-
-
-
-
+  
     if (!finalizeRes.ok) throw new Error("Finalize failed");
-
-    alert("Upload complete!");
+    showNotification("Upload complete!");
   } catch (err) {
-    console.error("Upload error:", err);
-    alert("Upload failed: " + err.message);
+    showErrorNotification("Upload failed: " + err.message);
   }
+  
 };
-
-
-
-// document.getElementById("upload-btn").onclick = async () => {
-//   const fileInput = document.getElementById("upload-input");
-//   if (!fileInput.files.length) return alert("Select a file");
-
-//   const file = fileInput.files[0];
-//   const projectId = 'b.29ab0ff3-ee12-4af6-b0a3-590ba4bc0ddf';
-//   const folderId = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
-//   const fileName = file.name;
-//   const token = localStorage.getItem('authToken');
-
-//   try {
-//     // 1. Initiate upload
-//     const res = await fetch('/api/acc/upload/initiate', {
-//       method: 'POST',
-//       credentials: 'include',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${token}`
-//       },
-//       body: JSON.stringify({ fileName, projectId, folderId, token })
-//     });
-
-//     if (!res.ok) {
-//       const errorText = await res.text();
-//       console.error("❌ Initiate failed:", res.status, errorText);
-//       alert("Upload init failed: " + res.status);
-//       return;
-//     }
-
-//     const { uploadParams, storageId } = await res.json();
-
-//     // 2. Upload to S3 (if available)
-//     if (uploadParams) {
-//       const formData = new FormData();
-//       Object.entries(uploadParams.fields).forEach(([k, v]) => formData.append(k, v));
-//       formData.append("file", file);
-
-//       const uploadResp = await fetch(uploadParams.url, {
-//         method: 'POST',
-//         body: formData
-//       });
-
-//       if (!uploadResp.ok) throw new Error("S3 upload failed");
-//       console.log("✅ File uploaded to S3");
-//     } else {
-//       console.warn("⚠️ Skipping S3 upload: `uploadParams` missing. Continuing to finalize.");
-//     }
-
-//     // 3. Finalize upload in ACC
-//     const finalize = await fetch('/api/acc/upload/finalize', {
-//       method: 'POST',
-//       credentials: 'include',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${token}`
-//       },
-//       body: JSON.stringify({ fileName, projectId, folderId, storageId })
-//     });
-
-//     if (finalize.ok) {
-//       alert("✅ Upload complete!");
-//     } else {
-//       console.error(await finalize.text());
-//       alert("❌ Finalize failed");
-//     }
-//   } catch (err) {
-//     console.error("🚨 Upload failed", err);
-//     alert("Upload error: " + err.message);
-//   }
-// };
 
 
 
@@ -358,6 +273,8 @@ document.getElementById("create-issue-btn").onclick = async () => {
   const panel = document.getElementById("issue-panel");
   panel.style.visibility = "hidden";
   document.getElementById("preview").style.width = "97%"
+  let params = new URLSearchParams(window.location.search);
+  const projectId = 'b.' + params.get('id');
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -459,7 +376,39 @@ window.addEventListener("message", (event) => {
   }
 });
 
-// ------------------ EVENTS ------------------
+
+// ----------------------------------------------------- EVENTS -----------------------------------------------------
+// ----------------------------------------------------- EVENTS -----------------------------------------------------
+// ----------------------------------------------------- EVENTS -----------------------------------------------------
+
+function showNotification(message) {
+  const notif = document.getElementById('notif');
+  const notifMessage = document.getElementById('notif-message');
+  notifMessage.textContent = message;
+  notif.classList.remove('hidden');
+  notif.classList.add('show');
+
+  setTimeout(() => {
+    notif.classList.remove('show');
+    setTimeout(() => notif.classList.add('hidden'), 400); // Wait for transition
+  }, 5000); // Visible for 3 seconds
+}
+
+
+function showErrorNotification(message) {
+  const notif = document.getElementById('notifError');
+  const notifMessage = document.getElementById('notifError-message');
+  notifMessage.textContent = message;
+  notif.classList.remove('hidden');
+  notif.classList.add('show');
+
+  setTimeout(() => {
+    notif.classList.remove('show');
+    setTimeout(() => notif.classList.add('hidden'), 400); // Wait for transition
+  }, 5000); // Visible for 3 seconds
+}
+
+
 
 function sheetsPanel() {
   const modelBrowserPanel = document.getElementById("model-browser-panel");
