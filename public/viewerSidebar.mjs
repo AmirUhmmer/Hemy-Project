@@ -141,8 +141,9 @@ document.getElementById("upload-btn").onclick = async () => {
 
   if (!fileInput.files.length) return alert("Select a file");
 
-
   const filename = fileInput.files[0].name;
+
+  showInfoNotification("Processing your upload. Please wait...."); //show notif
 
   let hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';  // static hub ID
   let params = new URLSearchParams(window.location.search);
@@ -268,6 +269,10 @@ document.getElementById("upload-btn").onclick = async () => {
 
 
 
+
+
+
+// ------------------------------------------ CREATE ISSUES ------------------------------------------------ 
 document.getElementById("create-issue-btn").onclick = async () => { 
   const viewer = window.viewerInstance;
   const panel = document.getElementById("issue-panel");
@@ -294,44 +299,96 @@ document.getElementById("create-issue-btn").onclick = async () => {
 
   pushpin_ext.pushPinManager.addEventListener('pushpin.created', function (e) {
     const pushpinId = e.value?.itemData?.id;
-
+  
     if (pushpinId) {
       pushpin_ext.endCreateItem();
       pushpin_ext.setDraggableById(pushpinId, true);
     }
-
+  
     const issuePanel = document.getElementById("issue-details-panel");
     issuePanel.style.visibility = "visible";
-    document.getElementById("preview").style.width = "72%"
+    document.getElementById("preview").style.width = "72%";
+  
     setTimeout(() => {
       window.viewerInstance.resize();
       window.viewerInstance.fitToView();
     }, 300);
-
-
-    document.getElementById("save-issue-btn").onclick = async () => { 
+  
+    document.getElementById("save-issue-btn").onclick = async () => {
       const issue = pushpin_ext.getItemById(pushpinId);
       const model = viewer.impl.modelQueue().getModels()[0];
-      const seedUrn = model.getSeedUrn(); // base64 URN
-      const decodedUrn = atob(seedUrn.replace(/_/g, '/').replace(/-/g, '+'));
-      const versionNumber = decodedUrn.split('version=')[1];
-      // const selNode = getSelectedNodeData();
+      const versionUrn = model.getData().urn;
+      const seedUrn = model.getSeedUrn();
       const loadedDocument = viewer.model.getDocumentNode();
+  
+      if (!versionUrn) {
+        console.error("❌ versionUrn is missing from model.getData().urn");
+        alert("Version ID not found in loaded model.");
+        return;
+      }
+  
+      let params = new URLSearchParams(window.location.search);
+      const projectId = params.get('id');
+      const authToken = localStorage.getItem("authToken");
+      const title = document.getElementById("issue-title").value;
+      
+      function fixBase64UrlEncoding(str) {
+        // Remove 'urn:' prefix if present
+        str = str.replace(/^urn:/, '');
+
+        // Replace URL-safe chars back to standard Base64
+        str = str.replace(/-/g, '+').replace(/_/g, '/');
+
+        // Add padding if needed
+        while (str.length % 4 !== 0) {
+          str += '=';
+        }
+
+        return str;
+      }
+
+      let version = null;
+      let readableSeedUrn = null;
+
+      try {
+        const fixedVersionUrn = fixBase64UrlEncoding(versionUrn);
+        const decodedVersionUrn = atob(fixedVersionUrn);
+        console.log("✅ Decoded Version URN:", decodedVersionUrn);
+
+        const match = decodedVersionUrn.match(/version=(\d+)/);
+        version = match ? parseInt(match[1], 10) : null;
+        console.log("📦 Version number:", version);
+      } catch (e) {
+        console.warn("⚠️ Failed to decode version URN:", e.message);
+      }
+
+      try {
+        const fixedSeedUrn = fixBase64UrlEncoding(seedUrn);
+        readableSeedUrn = atob(fixedSeedUrn);
+        console.log("📄 Readable Seed URN:", readableSeedUrn);
+      } catch (e) {
+        console.warn("⚠️ Failed to decode seed URN:", e.message);
+      }
+
+
+
 
       const payload = {
-        title: document.getElementById("issue-title").value,
-        status: 'open',
-        issueSubtypeId: "e931d7af-e1fd-42d0-a1f5-6b570cf0c26f",
+        title: title,
+        status: "open",
+        description: "Pushpin issue created",
+        // dueDate: new Date().toISOString().split("T")[0],
+        issueSubtypeId: "e931d7af-e1fd-42d0-a1f5-6b570cf0c26f", // Use your correct subtype ID
         linkedDocuments: [
           {
-            type: 'TwoDVectorPushpin',
-            urn: seedUrn,
-            createdAtVersion: Number(versionNumber),
+            type: "TwoDVectorPushpin",
+            urn: seedUrn, // ✅ use decoded URN, not base64
+            createdAtVersion: Number(version), // ✅ must be integer
             details: {
               viewable: {
                 name: loadedDocument.data.name,
                 guid: loadedDocument.data.guid,
-                is3D: loadedDocument.data.role == '3d',
+                is3D: loadedDocument.data.role === "3d",
                 viewableId: loadedDocument.data.viewableID
               },
               externalId: issue.externalId,
@@ -342,17 +399,36 @@ document.getElementById("create-issue-btn").onclick = async () => {
           }
         ]
       };
-
-      if (payload){
-        const response = await fetch(`https://developer.api.autodesk.com/project/v1/projects/${projectId}/versions/${versionId}`, {
-          method: "GET",
+      
+  
+      try {
+        const issueRes = await fetch('/api/acc/postissue', {
+          method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          }
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ projectId, payload, title }) // ✅ send full payload
         });
+        
+  
+        if (!issueRes.ok) {
+          const responseText = await issueRes.text();
+          throw new Error(`❌ Failed to create issue. Status: ${issueRes.status}`);
+          
+        }
+  
+        const data = await issueRes.json();
+        console.log("✅ Issue created successfully:", data);
+        alert("Pushpin issue created!");
+      } catch (err) {
+        console.error(err);
+        alert("Error creating issue. See console for details.");
       }
-    }
+    };
   });
+  
+  
 };
 
 
@@ -380,6 +456,19 @@ window.addEventListener("message", (event) => {
 // ----------------------------------------------------- EVENTS -----------------------------------------------------
 // ----------------------------------------------------- EVENTS -----------------------------------------------------
 // ----------------------------------------------------- EVENTS -----------------------------------------------------
+
+function showInfoNotification(message) {
+  const notif = document.getElementById('notifInfo');
+  const notifMessage = document.getElementById('notifInfo-message');
+  notifMessage.textContent = message;
+  notif.classList.remove('hidden');
+  notif.classList.add('show');
+
+  setTimeout(() => {
+    notif.classList.remove('show');
+    setTimeout(() => notif.classList.add('hidden'), 400); // Wait for transition
+  }, 5000); // Visible for 3 seconds
+}
 
 function showNotification(message) {
   const notif = document.getElementById('notif');
@@ -583,7 +672,7 @@ function filesPanel() {
   panel.style.visibility = isVisible ? "hidden" : "visible";
   panel.style.visibility = isVisible
     ? (preview.style.width = "97%")
-    : (preview.style.width = "72%");
+    : (preview.style.width = "0%");
   document.getElementById("fileContainer").style.left = "3%";
 
   setTimeout(() => {

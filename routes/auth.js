@@ -143,147 +143,6 @@ router.post('/api/data', (req, res) => {
 
 
 
-
-
-
-
-
-
-// // ------------------------------
-// // POST /api/acc/upload/initiate
-// // ------------------------------
-// router.post('/api/acc/upload/initiate', async (req, res) => {
-//   const { fileName, projectId, folderId, token } = req.body;
-//   // const token = localStorage.getItem('internal_token');
-
-//   if (!token) return res.status(401).send('Missing access token');
-
-//   try {
-//     // Create storage location in ACC
-//     const storageRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/storage?include=uploadParameters`, {
-//       method: 'POST',
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         'Content-Type': 'application/vnd.api+json'
-//       },
-//       body: JSON.stringify({
-//         data: {
-//           type: 'objects',
-//           attributes: { name: fileName },
-//           relationships: {
-//             target: {
-//               data: { type: 'folders', id: folderId }
-//             }
-//           }
-//         }
-//       })
-//     });
-
-//     if (!storageRes.ok) {
-//       const errorText = await storageRes.text();
-//       console.error("❌ Storage creation failed:", errorText);
-//       return res.status(storageRes.status).send(errorText);
-//     }
-
-//     const storageJson = await storageRes.json();
-//     const storageId = storageJson.data.id;
-//     console.log("Storage created with ID:", storageId);
-//     console.log("Storage JSON:", storageJson);
-//     if (!storageJson.included || !Array.isArray(storageJson.included) || storageJson.included.length === 0) {
-//       console.error("❌ `included` section is missing in the storage response", JSON.stringify(storageJson, null, 2));
-//       return res.status(500).send("Missing upload parameters in response. Make sure you're using a valid ACC Docs folder.");
-//     }
-
-
-//     res.json({ uploadParams, storageId });
-//   } catch (err) {
-//     console.error("🚨 Initiate upload error:", err.message, err.stack);
-//     res.status(500).send("Upload initiation failed");
-//   }
-// });
-
-// // ------------------------------
-// // POST /api/acc/upload/finalize
-// // ------------------------------
-// router.post('/api/acc/upload/finalize', async (req, res) => {
-//   const { fileName, projectId, folderId, storageId } = req.body;
-//   const token = req.headers.authorization?.split(' ')[1];
-
-//   if (!token) return res.status(401).send('Missing access token');
-
-//   try {
-//     // Create item version in ACC
-//     const itemRes = await fetch(`https://developer.api.autodesk.com/data/v1/projects/${projectId}/items`, {
-//       method: 'POST',
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         'Content-Type': 'application/vnd.api+json'
-//       },
-//       body: JSON.stringify({
-//         data: {
-//           type: 'items',
-//           attributes: {
-//             displayName: fileName,
-//             extension: {
-//               type: 'items:autodesk.bim360:File',
-//               version: '1.0'
-//             }
-//           },
-//           relationships: {
-//             tip: {
-//               data: {
-//                 type: 'versions',
-//                 id: '1' // placeholder, overwritten by included version
-//               }
-//             },
-//             parent: {
-//               data: {
-//                 type: 'folders',
-//                 id: folderId
-//               }
-//             }
-//           }
-//         },
-//         included: [{
-//           type: 'versions',
-//           attributes: {
-//             name: fileName,
-//             extension: {
-//               type: 'versions:autodesk.bim360:File',
-//               version: '1.0'
-//             }
-//           },
-//           relationships: {
-//             storage: {
-//               data: {
-//                 type: 'objects',
-//                 id: storageId
-//               }
-//             }
-//           }
-//         }]
-//       })
-//     });
-
-//     if (!itemRes.ok) {
-//       const errorText = await itemRes.text();
-//       console.error("❌ Finalize failed:", errorText);
-//       return res.status(itemRes.status).send(errorText);
-//     }
-
-//     res.status(200).send("Upload finalized successfully");
-//   } catch (err) {
-//     console.error("🚨 Finalize upload error:", err);
-//     res.status(500).send("Upload finalize failed");
-//   }
-// });
-
-
-
-
-
-
-
 // POST /api/acc/upload/folderUrn
 router.post('/api/acc/upload/folderUrn', async (req, res) => {
   const { projectId } = req.body; // e.g. 'image.jpg', folder URN, project ID
@@ -622,6 +481,78 @@ router.post('/api/acc/upload/finalize', async (req, res) => {
     res.status(500).json({ error: "Unexpected error", details: error.message });
   }
 });
+
+
+
+
+
+
+
+router.post('/api/acc/postissue', async (req, res) => {
+  const { projectId, payload, title } = req.body;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+  const hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';
+
+  console.log("Initialize: ", projectId, payload, title)
+  if (!projectId || !title) {
+    return res.status(400).json({ error: "Missing projectId or title" });
+  }
+
+  try {
+    const projectRes = await fetch(
+      `https://developer.api.autodesk.com/project/v1/hubs/${hubId}/projects/${"b." + projectId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        }
+      }
+    );
+
+    const projectData = await projectRes.json();
+    if (!projectRes.ok) {
+      console.error("Project fetch failed:", projectData);
+      return res.status(projectRes.status).json(projectData);
+    }
+
+    const issueContainer = projectData.data.relationships.issues.data.id;
+    console.log("Issue Container ID:", issueContainer);
+
+    // ✅ Use full payload from frontend
+    const issueRes = await fetch(
+      `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+
+    const issueText = await issueRes.json();
+    console.log(issueText);
+    if (!issueRes.ok) {
+      console.error("Issue creation failed:", issueText);
+      return res.status(issueRes.status).json({ error: "Failed to create issue", details: issueText });
+    }
+
+    res.status(200).json({ message: 'Issue created successfully', details: issueText });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
+
+
+
 
 
 

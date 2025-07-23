@@ -44,7 +44,7 @@ body.preview-active #fileContainer {
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.4s ease;
-  z-index: 1000;
+  z-index: 1000000000;
 }
 
 .notif.show {
@@ -70,7 +70,7 @@ body.preview-active #fileContainer {
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.4s ease;
-  z-index: 1000;
+  z-index: 1000000000;
 }
 
 .notifError.show {
@@ -79,6 +79,32 @@ body.preview-active #fileContainer {
 }
 
 .notifError.hidden {
+  display: none;
+}
+
+
+.notifInfo {
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  background-color: #d49f2c;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 14px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  z-index: 1000000000;
+}
+
+.notifInfo.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notifInfo.hidden {
   display: none;
 }
 
@@ -192,6 +218,36 @@ body.preview-active #fileContainer {
   opacity: 1;
   visibility: visible;
 }
+
+
+
+.custom-node {
+  padding: 8px 12px;
+  margin: 4px 0;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.custom-node:hover {
+  background-color: #e5efff;
+}
+
+.folder-node {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.version-node {
+  margin-left: 20px;
+  color: #374151;
+}
+
+.child-container {
+  margin-left: 16px;
+}
+
 
 
 

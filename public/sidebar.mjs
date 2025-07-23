@@ -1,15 +1,3 @@
-// async function getJSON(url) {
-//     const resp = await fetch(url);
-//     if (!resp.ok) {
-//         alert('Could not load tree data. See console for more details.');
-//         console.error(await resp.text());
-//         return [];
-//     }
-//     return resp.json();
-// }
-
-// import { fetchAccessToken } from './main.mjs';
-
 async function getJSON(url) {
     const token = localStorage.getItem('authToken');
     const refreshToken = localStorage.getItem('refreshToken');
@@ -97,6 +85,62 @@ async function getContents(hubId, projectId, folderId = null) {
         return [...folderNodes, ...itemVersionNodes.filter(n => n !== null)];
     }
 }
+
+
+export async function renderCustomTree(onSelectionChanged) {
+  const hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';
+  const projectId = 'b.' + new URLSearchParams(window.location.search).get('id');
+  const rootNodes = await getContents(hubId, projectId); // Project Files folder
+
+  const treeContainer = document.getElementById('tree');
+  treeContainer.innerHTML = '';
+
+  for (const node of rootNodes) {
+    const div = document.createElement('div');
+    div.className = 'custom-node';
+    div.textContent = node.text;
+    div.dataset.nodeId = node.id;
+
+    if (node.id.startsWith('folder|')) {
+      div.classList.add('folder-node');
+      div.addEventListener('click', async () => {
+        const tokens = node.id.split('|');
+        const folderId = tokens[3];
+        const childNodes = await getContents(hubId, projectId, folderId);
+
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'child-container';
+
+        for (const child of childNodes) {
+          const childDiv = document.createElement('div');
+          childDiv.className = 'custom-node';
+          childDiv.textContent = child.text;
+          childDiv.dataset.nodeId = child.id;
+
+          if (child.id.startsWith('version|')) {
+            childDiv.classList.add('version-node');
+            childDiv.addEventListener('click', () => {
+              const versionId = child.id.split('|')[1];
+              onSelectionChanged(versionId);
+              document.getElementById('preview').classList.remove('hidden'); // match your HTML
+            });
+          }
+
+          childrenContainer.appendChild(childDiv);
+        }
+
+        // Prevent reloading same children again
+        if (!div.querySelector('.child-container')) {
+          div.appendChild(childrenContainer);
+        }
+      });
+    }
+
+    treeContainer.appendChild(div);
+  }
+}
+
+
 
 
 export function initTree(selector, onSelectionChanged) {
