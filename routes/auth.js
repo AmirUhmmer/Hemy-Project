@@ -525,7 +525,6 @@ router.post('/api/acc/postissue', async (req, res) => {
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(payload)
@@ -541,6 +540,47 @@ router.post('/api/acc/postissue', async (req, res) => {
     }
 
     res.status(200).json({ message: 'Issue created successfully', details: issueText });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
+
+
+router.post('/api/acc/getissues', async (req, res) => {
+  const { projectId, lineageUrn } = req.body;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  if (!projectId || !lineageUrn || !authToken) {
+    return res.status(400).json({ error: "Missing projectId, lineageUrn, or Authorization token" });
+  }
+
+  try {
+    const issueListRes = await fetch(
+      `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?filter[linkedDocumentUrn]=${encodeURIComponent(lineageUrn)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        }
+      }
+    );
+
+    const issueList = await issueListRes.json();
+
+    if (!issueListRes.ok) {
+      console.error("Issue fetch failed:", issueList);
+      return res.status(issueListRes.status).json(issueList);
+    }
+
+
+    console.log("Issue List:", issueList);
+    res.status(200).json({ message: 'Issue List retrieved', details: issueList });
 
   } catch (err) {
     console.error("Error:", err);

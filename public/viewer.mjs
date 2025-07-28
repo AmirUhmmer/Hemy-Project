@@ -64,7 +64,10 @@ export function loadModel(viewer, urn) {
     console.log("URN: ", urn);
     async function onDocumentLoadSuccess(doc) {
         const defaultViewable = doc.getRoot().getDefaultGeometry();
-
+        const loadOptions = {
+            globalOffset: { x: 0, y: 0, z: 0 },  // Force all models to origin
+            applyRefPoint: true, // Apply reference point for 3D shared coordinates
+        };
         if (!defaultViewable) {
             console.error("No default geometry found in document.");
             return;
@@ -73,7 +76,7 @@ export function loadModel(viewer, urn) {
         const role = defaultViewable.data.role; // '2d' or '3d'
         console.log("Viewable role:", role);
 
-        const loaded = await viewer.loadDocumentNode(doc, defaultViewable);
+        const loaded = await viewer.loadDocumentNode(doc, defaultViewable, loadOptions);
         if (loaded) {
             if (role === '2d') {
                 functions.toolbarButtons2D(viewer);

@@ -56,7 +56,18 @@ async function initApp() {
 
 async function startApp() {
     const viewer = await initViewer(document.getElementById("preview"));
-    initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
+    // initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
+    initTree('#tree', (version, item, project) => {
+
+        // 🔐 Store in localStorage for later use in issue creation
+        window.lineageUrn = item; // `item` is the lineage URN
+
+        // console.log("🔑 Selected version:", window.lineageUrn);
+
+        // 👇 Load the model as before
+        loadModel(viewer, window.btoa(version).replace(/=/g, '').replace(/\//g, '_'));
+    });
+
 }
 
 

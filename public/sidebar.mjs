@@ -71,20 +71,111 @@ async function getContents(hubId, projectId, folderId = null) {
                 true
             ));
 
+        // const itemVersionNodes = await Promise.all(contents
+        //     .filter(item => item.type === 'items')
+        //     .map(async item => {
+        //         const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
+        //         if (versions.length > 0) {
+        //             const latest = versions[0];
+        //             return createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');
+        //         }
+        //         return null;
+        //     }));
+
         const itemVersionNodes = await Promise.all(contents
-            .filter(item => item.type === 'items')
-            .map(async item => {
-                const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
-                if (versions.length > 0) {
-                    const latest = versions[0];
-                    return createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');
-                }
-                return null;
-            }));
+        .filter(item => item.type === 'items')
+        .map(async item => {
+            const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
+            if (versions.length > 0) {
+            const latest = versions[0];
+            const node = createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');
+            node.itm = item.id; // ✅ lineage URN
+            return node;
+            }
+            return null;
+        }));
+
+        
 
         return [...folderNodes, ...itemVersionNodes.filter(n => n !== null)];
     }
 }
+
+
+
+export function initTree(selector, onSelectionChanged) {
+    let hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';  // static hub ID
+    let params = new URLSearchParams(window.location.search);
+    let projectID = 'b.' + params.get('id');
+    console.log("Project ID:", projectID);
+
+    const tree = new InspireTree({
+        data: function (node) {
+            if (!node || !node.id) {
+                return getContents(hubId, projectID); // Load root, will fetch only "Project Files"
+            } else {
+                const tokens = node.id.split('|');
+                switch (tokens[0]) {
+                    case 'folder': return getContents(hubId, projectID, tokens[3]); // Load only latest versions
+                    default: return [];
+                }
+            }
+        }
+    });
+
+    tree.on('model.loaded', function () {
+        onSelectionChanged(0);
+
+        if (window.projectFilesFolderId) {
+            const projectFilesNodeId = `folder|${hubId}|${projectID}|${window.projectFilesFolderId}`;
+            const node = tree.node(projectFilesNodeId);
+            if (node) {
+                node.expand();
+            }
+        }
+    });
+
+
+    tree.on('node.click', function (event, node) {
+    event.preventTreeDefault();
+    const tokens = node.id.split('|');
+
+    // if (tokens[0] === 'version') {
+    //     onSelectionChanged(tokens[1]);
+
+    //     // Show preview panel (optional toggle)
+    //     document.getElementById('preview').classList.add('active');
+    // }
+
+
+    if (tokens[0] === 'version') {
+        const versionUrn = tokens[1];
+        const itemUrn = node.itm;
+        const projectId = projectID;
+
+        // Set globals if needed
+        window.lineageUrn = itemUrn;
+        window.versionUrn = versionUrn;
+        window.projectId = projectId;
+
+        console.log("🔑 Selected Version:", versionUrn);
+        console.log("📁 Lineage URN:", itemUrn);
+        console.log("🏗️ Project ID:", projectId);
+
+        onSelectionChanged(versionUrn, itemUrn, projectId);
+
+        document.getElementById('preview').classList.add('active');
+    }
+
+    });
+
+
+
+    return new InspireTreeDOM(tree, { target: selector });
+}
+
+
+
 
 
 export async function renderCustomTree(onSelectionChanged) {
@@ -138,64 +229,4 @@ export async function renderCustomTree(onSelectionChanged) {
 
     treeContainer.appendChild(div);
   }
-}
-
-
-
-
-export function initTree(selector, onSelectionChanged) {
-    let hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';  // static hub ID
-    let params = new URLSearchParams(window.location.search);
-    let projectID = 'b.' + params.get('id');
-    console.log("Project ID:", projectID);
-
-    const tree = new InspireTree({
-        data: function (node) {
-            if (!node || !node.id) {
-                return getContents(hubId, projectID); // Load root, will fetch only "Project Files"
-            } else {
-                const tokens = node.id.split('|');
-                switch (tokens[0]) {
-                    case 'folder': return getContents(hubId, projectID, tokens[3]); // Load only latest versions
-                    default: return [];
-                }
-            }
-        }
-    });
-
-    tree.on('model.loaded', function () {
-        onSelectionChanged(0);
-
-        if (window.projectFilesFolderId) {
-            const projectFilesNodeId = `folder|${hubId}|${projectID}|${window.projectFilesFolderId}`;
-            const node = tree.node(projectFilesNodeId);
-            if (node) {
-                node.expand();
-            }
-        }
-    });
-
-    // tree.on('node.click', function (event, node) {
-    //     event.preventTreeDefault();
-    //     const tokens = node.id.split('|');
-    //     if (tokens[0] === 'version') {
-    //         onSelectionChanged(tokens[1]); // version ID
-    //     }
-    // });
-
-tree.on('node.click', function (event, node) {
-  event.preventTreeDefault();
-  const tokens = node.id.split('|');
-
-  if (tokens[0] === 'version') {
-    onSelectionChanged(tokens[1]);
-
-    // Show preview panel (optional toggle)
-    document.getElementById('preview').classList.add('active');
-  }
-});
-
-
-
-    return new InspireTreeDOM(tree, { target: selector });
 }

@@ -110,6 +110,13 @@ document.getElementById("search").addEventListener("click", function first() {
   );
 });
 
+
+
+
+
+
+
+// ------------------------------------------ FILE UPLOAD LANDING PAGE ------------------------------------------------ 
 const fileInput = document.getElementById("upload-input");
 const fileLabel = document.querySelector(".custom-file-label");
 
@@ -136,6 +143,9 @@ fileInput.addEventListener('change', () => {
 });
 
 
+
+
+// ------------------------------------------ FILE UPLOAD BACKEND PROCESS ------------------------------------------------ 
 document.getElementById("upload-btn").onclick = async () => {
   const fileInput = document.getElementById("upload-input");
 
@@ -269,6 +279,9 @@ document.getElementById("upload-btn").onclick = async () => {
 
 
 
+// ------------------------------------------ ISSUES LIST ------------------------------------------------ 
+
+
 
 
 
@@ -348,7 +361,6 @@ document.getElementById("create-issue-btn").onclick = async () => {
       }
 
       let version = null;
-      let readableSeedUrn = null;
 
       try {
         const fixedVersionUrn = fixBase64UrlEncoding(versionUrn);
@@ -362,16 +374,6 @@ document.getElementById("create-issue-btn").onclick = async () => {
         console.warn("⚠️ Failed to decode version URN:", e.message);
       }
 
-      try {
-        const fixedSeedUrn = fixBase64UrlEncoding(seedUrn);
-        readableSeedUrn = atob(fixedSeedUrn);
-        console.log("📄 Readable Seed URN:", readableSeedUrn);
-      } catch (e) {
-        console.warn("⚠️ Failed to decode seed URN:", e.message);
-      }
-
-
-
 
       const payload = {
         title: title,
@@ -382,7 +384,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
         linkedDocuments: [
           {
             type: "TwoDVectorPushpin",
-            urn: seedUrn, // ✅ use decoded URN, not base64
+            urn: window.lineageUrn, // ✅ use decoded URN, not base64
             createdAtVersion: Number(version), // ✅ must be integer
             details: {
               viewable: {
@@ -415,12 +417,13 @@ document.getElementById("create-issue-btn").onclick = async () => {
         if (!issueRes.ok) {
           const responseText = await issueRes.text();
           throw new Error(`❌ Failed to create issue. Status: ${issueRes.status}`);
-          
+          showErrorNotification(`Error creating issue: ${responseText}`);
         }
   
         const data = await issueRes.json();
-        console.log("✅ Issue created successfully:", data);
-        alert("Pushpin issue created!");
+        showNotification("Issue created successfully");
+        document.getElementById("issue-details-panel").style.visibility = "hidden";
+        viewer.resize();
       } catch (err) {
         console.error(err);
         alert("Error creating issue. See console for details.");
@@ -805,4 +808,91 @@ async function createIssuePanel() {
     window.viewerInstance.fitToView();
   }, 300);
 
+
+  const authToken = localStorage.getItem('authToken');
+  let params = new URLSearchParams(window.location.search);
+  const projectId = params.get('id');
+  const lineageUrn = window.lineageUrn;
+
+  try {
+    const issueRes = await fetch('/api/acc/getissues', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ projectId, lineageUrn })
+    });
+
+    if (!issueRes.ok) {
+      const responseText = await issueRes.text();
+      throw new Error(`❌ Failed to get issues. Status: ${issueRes.status}\n${responseText}`);
+    }
+
+    const data = await issueRes.json();
+    showNotification("Issue list retrieved successfully");
+
+    const issues = data.details?.results || [];
+    populateIssueList(issues); // 👈 Your own function to populate the cards
+    viewer.resize();
+  } catch (err) {
+    console.error(err);
+    alert("Error retrieving issues. See console for details.");
+  }
 }
+
+async function populateIssueList(issues) {
+  const container = document.querySelector('.issue-list-container');
+  container.innerHTML = ''; // Clear old cards
+
+  const viewer = window.viewerInstance;
+  const viewerNode = viewer.model.getDocumentNode();
+
+  // Load PushPin extension if not already loaded
+  if (!viewer.getExtension("Autodesk.BIM360.Extension.PushPin")) {
+    await viewer.loadExtension("Autodesk.BIM360.Extension.PushPin");
+  }
+
+  const pushpin_ext = viewer.getExtension("Autodesk.BIM360.Extension.PushPin");
+
+  // Optional: clear existing pushpins
+  pushpin_ext.pushPinManager.removeAllItems();
+
+  issues.forEach((issue) => {
+    const linkedDoc = issue.linkedDocuments?.[0]?.details;
+
+    // 🟢 Render issue card
+    const card = document.createElement('div');
+    card.className = 'issue-card';
+    card.innerHTML = `
+      <div>Issue: ${issue.title || '[Untitled]'}</div>
+      <div>Type: ${issue.issueTypeId || '-'} &nbsp; Status: ${issue.status || '-'}</div>
+    `;
+    container.appendChild(card);
+
+    // 🟡 Create pushpin if it's for the current viewable
+    if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
+      pushpin_ext.pushPinManager.createItem({
+        id: issue.id,
+        label: issue.displayId?.toString() || issue.title || "Issue",
+        status: issue.issueTypeId && issue.status.indexOf(issue.issueTypeId) === -1
+          ? `${issue.issueTypeId}-${issue.status}`
+          : issue.status,
+        position: linkedDoc.position,
+        type: issue.issueTypeId,
+        objectId: linkedDoc.objectId,
+        viewerState: linkedDoc.viewerState
+      });
+
+      // 🔍 On card click, restore viewer state
+      card.addEventListener('click', () => {
+        if (linkedDoc.viewerState) {
+          viewer.restoreState(linkedDoc.viewerState);
+        }
+      });
+    }
+  });
+}
+
+
+

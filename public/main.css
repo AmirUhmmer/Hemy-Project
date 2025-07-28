@@ -717,6 +717,34 @@ body.preview-active #fileContainer {
   gap: 12px;
 }
 
+
+
+/* ============================== ISSUE LIST ============================== */
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.issue-list-container {
+  overflow-y: auto;
+  flex-grow: 1;
+  border-top: 1px solid #ccc;
+  padding-top: 8px;
+}
+
+.issue-card {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* ============================== ISSUE REPORTING ============================== */
 .issue-reporting-content input,
 .issue-reporting-content textarea {
   font-family: inherit;
