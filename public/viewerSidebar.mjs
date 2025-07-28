@@ -789,6 +789,10 @@ function fileUploadPanel() {
 }
 
 
+
+
+
+//-------------------------------- ISSUES --------------------------------
 async function createIssuePanel() {
   const viewer = window.viewerInstance;
   const modelBrowserPanel = document.getElementById("model-browser-panel");
@@ -833,7 +837,7 @@ async function createIssuePanel() {
     showNotification("Issue list retrieved successfully");
 
     const issues = data.details?.results || [];
-    populateIssueList(issues); // 👈 Your own function to populate the cards
+    populateIssueList(issues); // function to populate the cards
     viewer.resize();
   } catch (err) {
     console.error(err);
@@ -849,14 +853,16 @@ async function populateIssueList(issues) {
   const viewerNode = viewer.model.getDocumentNode();
 
   // Load PushPin extension if not already loaded
-  if (!viewer.getExtension("Autodesk.BIM360.Extension.PushPin")) {
-    await viewer.loadExtension("Autodesk.BIM360.Extension.PushPin");
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  let pushpin_ext = viewer.getExtension(extName);
+  if (!pushpin_ext) {
+    pushpin_ext = await viewer.loadExtension(extName);
   }
-
-  const pushpin_ext = viewer.getExtension("Autodesk.BIM360.Extension.PushPin");
 
   // Optional: clear existing pushpins
   pushpin_ext.pushPinManager.removeAllItems();
+
+  const pushpinItems = [];
 
   issues.forEach((issue) => {
     const linkedDoc = issue.linkedDocuments?.[0]?.details;
@@ -870,21 +876,20 @@ async function populateIssueList(issues) {
     `;
     container.appendChild(card);
 
-    // 🟡 Create pushpin if it's for the current viewable
+    // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
-      pushpin_ext.pushPinManager.createItem({
+      const pushpinItem = {
         id: issue.id,
-        label: issue.displayId?.toString() || issue.title || "Issue",
-        status: issue.issueTypeId && issue.status.indexOf(issue.issueTypeId) === -1
-          ? `${issue.issueTypeId}-${issue.status}`
-          : issue.status,
+        label: `#${issue.displayId} - ${issue.title}`,
+        status: issue.status,
         position: linkedDoc.position,
-        type: issue.issueTypeId,
         objectId: linkedDoc.objectId,
         viewerState: linkedDoc.viewerState
-      });
+      };
 
-      // 🔍 On card click, restore viewer state
+      pushpinItems.push(pushpinItem);
+
+      // 🔍 Restore viewer state on card click
       card.addEventListener('click', () => {
         if (linkedDoc.viewerState) {
           viewer.restoreState(linkedDoc.viewerState);
@@ -892,7 +897,25 @@ async function populateIssueList(issues) {
       });
     }
   });
+
+  // 🟢 Load all pushpins once
+  if (pushpinItems.length > 0) {
+    pushpin_ext.loadItemsV2(pushpinItems);
+
+    // Update pin colors after a slight delay to let DOM render them
+    setTimeout(() => {
+      issues.forEach(issue => {
+        const el = document.getElementById(issue.id);
+        if (el) {
+          el.style.backgroundColor = '#F54927'; // your custom red-orange
+        }
+      });
+    }, 200); // delay ensures elements are in DOM
+  }
+
+
 }
+
 
 
 
