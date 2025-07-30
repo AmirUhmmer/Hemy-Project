@@ -1,0 +1,163 @@
+
+
+.issues, .issues-details {
+  font-family: ArtifaktElement;
+  visibility: hidden;
+  position: fixed;
+  top: 0;
+  left: 3%;
+  width: 25%;
+  height: 100vh;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: scroll; /* Prevent outer scrollbars */
+}
+
+.issue-reporting-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+
+/* ============================== ISSUE LIST ============================== */
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.issue-list-container {
+  overflow-y: auto;
+  flex-grow: 1;
+  border-top: 1px solid #ccc;
+  padding-top: 8px;
+}
+
+.issue-card {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.issue-card:hover {
+  cursor: pointer;
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.issue-card.selected {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+/* ============================== ISSUE REPORTING ============================== */
+.issue-reporting-content input,
+.issue-reporting-content select,
+.issue-reporting-content textarea {
+  font-family: inherit;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.issue-reporting-content input:focus,
+.issue-reporting-content textarea:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  background-color: #fff;
+}
+
+.issue-reporting-content textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+
+
+/* Target the Choices wrapper inside your issue-reporting-content */
+.issue-reporting-content .choices {
+  font-family: inherit;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Inner wrapper where selected items appear */
+/* .issue-reporting-content .choices__inner {
+  padding: 12px 14px;
+  border: none;
+  background-color: transparent;
+  min-height: auto;
+} */
+
+/* On focus state (same as your inputs) */
+/* .issue-reporting-content .choices.is-focused .choices__inner {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  background-color: #fff;
+} */
+
+/* Selected items (badges) inside multiple select */
+/* .issue-reporting-content .choices__list--multiple .choices__item {
+  background-color: #e8f0fe;
+  border: 1px solid #c6dafc;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-right: 6px;
+  font-size: 13px;
+} */
+
+/* Remove unnecessary extra spacing */
+.issue-reporting-content .choices__list--multiple {
+  padding: 0;
+  margin: 0;
+}
+
+.save-issue-btn {
+  background-color: #0a7720;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-issue-btn:hover {
+  background-color: #09611a;
+}
+
+.cancel-btn {
+  background-color: #ec3a3a;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #be2f2f;
+}

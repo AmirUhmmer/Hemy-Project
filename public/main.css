@@ -653,7 +653,7 @@ body.preview-active #fileContainer {
 }
 
 
-.file-upload, .issues, .issues-details {
+.file-upload {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -711,7 +711,7 @@ body.preview-active #fileContainer {
 }
 
 /* Optional spacing for layout */
-.file-upload-content, .issue-reporting-content {
+.file-upload-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -719,82 +719,3 @@ body.preview-active #fileContainer {
 
 
 
-/* ============================== ISSUE LIST ============================== */
-.icon-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-}
-
-.issue-list-container {
-  overflow-y: auto;
-  flex-grow: 1;
-  border-top: 1px solid #ccc;
-  padding-top: 8px;
-}
-
-.issue-card {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-/* ============================== ISSUE REPORTING ============================== */
-.issue-reporting-content input,
-.issue-reporting-content textarea {
-  font-family: inherit;
-  padding: 12px 14px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  background-color: #f9f9f9;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.issue-reporting-content input:focus,
-.issue-reporting-content textarea:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-  background-color: #fff;
-}
-
-.issue-reporting-content textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.save-issue-btn {
-  background-color: #0a7720;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  font-size: 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.save-issue-btn:hover {
-  background-color: #09611a;
-}
-
-.cancel-btn {
-  background-color: #ec3a3a;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  font-size: 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.cancel-btn:hover {
-  background-color: #be2f2f;
-}

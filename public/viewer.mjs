@@ -1,4 +1,5 @@
 import * as functions from './functions.mjs';
+import * as issuefunctions from './issueReporting.mjs';
 
 let viewerInstance;
 
@@ -85,6 +86,10 @@ export function loadModel(viewer, urn) {
                 viewer.model.getSeedUrn();
                 const decodedUrn = atob(urn.replace(/_/g, '/').replace(/-/g, '+'));
                 console.log("Decoded URN:", decodedUrn);
+                let params = new URLSearchParams(window.location.search);
+                const projectId = params.get('id');
+                const authToken = localStorage.getItem('authToken');
+                issuefunctions.loadIssueTypes(projectId, authToken);
             }
         }
     }

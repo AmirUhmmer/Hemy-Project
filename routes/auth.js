@@ -488,6 +488,38 @@ router.post('/api/acc/upload/finalize', async (req, res) => {
 
 
 
+
+
+// -------------------------------- ISSUE REPORTING --------------------------------
+
+
+router.get('/api/acc/getIssueType', async (req, res) => {
+  const { projectId } = req.query;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+
+  const response = await fetch(`https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issue-types?include=subtypes`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${authToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    console.error("Get issue types error: ", err);
+    return res.status(500).json(err);
+  }
+
+  const data = await response.json(); // includes `uploadKey` and `urls`
+  console.log("Get issue types data:", data);
+  res.json(data);
+});
+
+
+
+// post or create issue
 router.post('/api/acc/postissue', async (req, res) => {
   const { projectId, payload, title } = req.body;
   const authHeader = req.headers.authorization;
@@ -550,7 +582,7 @@ router.post('/api/acc/postissue', async (req, res) => {
 
 
 
-
+// get issues
 router.post('/api/acc/getissues', async (req, res) => {
   const { projectId, lineageUrn } = req.body;
   const authHeader = req.headers.authorization;
@@ -590,6 +622,149 @@ router.post('/api/acc/getissues', async (req, res) => {
 
 
 
+
+
+// custom attributes
+router.post('/api/acc/getCustomAttributes', async (req, res) => {
+  const { projectId } = req.body;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  if (!projectId || !authToken) {
+    return res.status(400).json({ error: "Missing projectId, lineageUrn, or Authorization token" });
+  }
+
+  try {
+    const customAttributesData = await fetch(
+      `	https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issue-attribute-definitions`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        }
+      }
+    );
+
+    const customAttributes = await customAttributesData.json();
+
+    if (!customAttributesData.ok) {
+      console.error("Issue fetch failed:", customAttributes);
+      return res.status(customAttributesData.status).json(customAttributes);
+    }
+
+
+    console.log("Custom Attributes:", customAttributes);
+    res.status(200).json({ results: customAttributes.results });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
+// get project users
+router.post('/api/acc/getProjectMembers', async (req, res) => {
+  const { projectId } = req.body;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  if (!projectId || !authToken) {
+    return res.status(400).json({ error: "Missing projectId, lineageUrn, or Authorization token" });
+  }
+
+  try {
+    const usersData = await fetch(
+      `https://developer.api.autodesk.com/construction/admin/v1/projects/${projectId}/users`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        }
+      }
+    );
+
+    const userList = await usersData.json();
+
+    if (!usersData.ok) {
+      console.error("Project User fetch failed:", userList);
+      return res.status(usersData.status).json(userList);
+    }
+
+
+    console.log("Project User Lists:", userList);
+    res.status(200).json({ results: userList.results });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
+
+
+
+
+// get companies
+router.post('/api/acc/getCompanies', async (req, res) => {
+  const { projectId } = req.body;
+  const accountId = '7a656dca-000a-494b-9333-d9012c464554';
+
+  if (!projectId) {
+    return res.status(400).json({ error: "Missing projectId" });
+  }
+
+  try {
+    // Step 1: Get a 2-legged token
+    const tokenResponse = await fetch('https://developer.api.autodesk.com/authentication/v2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'Authorization': `Basic ${Buffer.from(`${APS_CLIENT_ID}:${APS_CLIENT_SECRET}`).toString('base64')}`,
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        scope: 'data:read data:write account:read viewables:read',
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.json();
+      throw new Error(`2-legged token fetch failed: ${error.message || tokenResponse.statusText}`);
+    }
+
+    const { access_token } = await tokenResponse.json();
+
+    // Step 2: Use 2-legged token to fetch companies
+    const companiesData = await fetch(
+      `https://developer.api.autodesk.com/hq/v1/accounts/${accountId}/projects/${projectId}/companies`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        }
+      }
+    );
+
+    const companiesList = await companiesData.json();
+
+    if (!companiesData.ok) {
+      console.error("Companies fetch failed:", companiesList);
+      return res.status(companiesData.status).json(companiesList);
+    }
+
+    console.log("Companies Lists:", companiesList);
+    res.status(200).json({ results: companiesList });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
 
 
 

@@ -8,7 +8,9 @@
   <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css" />
   <link rel="stylesheet" href="./main.css" />
+  <link rel="stylesheet" href="./issues.css" />
   <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <title>Hemy Projects</title>
 </head>
 <!-- test main branch -->
@@ -252,7 +254,8 @@
     </div>
         <div class="issue-card" id="issue-1">
       <div>Issue: Test</div>
-      <div>Type: <span></span> &nbsp; Status: <span></span></div>
+      <div>Type: <span></span></div>
+      <div>Status: <span></span></div>
     </div>
     <!-- Duplicate more issue-card blocks as needed -->
   </div>
@@ -270,19 +273,64 @@
     <h3>Issue Reporting</h3>
   </div>
   <div class="issue-reporting-content">
-    <label for="issue-title">Issue Title</label>
-    <input type="text" id="issue-title" placeholder="Issue Title" />
-    <label for="issue-description">Description</label>
-    <textarea id="issue-description" placeholder="Describe the issue..."></textarea>
-    <label for="issue-upload-input" class="custom-file-label">Attachment</label>
-    <input type="file" id="issue-upload-input" class="hidden-file-input" />
-    <textarea id="issue-description" placeholder="Describe the issue..."></textarea>
-    <label for="issue-start-date">Start Date:</label>
-    <input type="date" id="issue-start-date" placeholder="Start Date" />
-    <label for="issue-due-date">Due Date:</label>
-    <input type="date" id="issue-due-date" placeholder="Due Date" />
-    <button id="save-issue-btn" class="save-issue-btn">Save Issue</button>
-    <button id="cancel-issue-btn" class="cancel-btn">Cancel</button>
+    <form id="issue-form" class="issue-reporting-content">
+
+      <label for="issue-title">Issue Title</label>
+      <input type="text" id="issue-title" placeholder="Issue Title" />
+
+      <label for="issue-types">Issue Types</label>
+      <select name="Issue Types" id="issue-types">
+        <option value="Design Changes">Design Changes</option>
+        <option value="Others">Others</option>
+      </select>
+
+      <label for="issue-task">Issue/Task</label>
+      <input type="text" id="issue-task" placeholder="Issue/Task" readonly="true"/>
+
+      <label for="issue-hard-asset">Hard Asset Name</label>
+      <input type="text" id="issue-hard-asset" placeholder="Hard Asset Name"/>
+
+      <label for="issue-function-location">Functional Location</label>
+      <input type="text" id="issue-functional-location" placeholder="Functional Location"/>
+
+      <label for="issue-description">Description</label>
+      <textarea id="issue-description" placeholder="Describe the issue..."></textarea>
+      
+      
+      <label for="issue-upload-input" class="custom-file-label">Attachment</label>
+      <input type="file" id="issue-upload-input" class="hidden-file-input" />
+
+      <label for="issue-assigned-to">Assigned to</label>
+      <select name="Issue Types" id="issue-assigned-to">
+        <option value="Design Changes">User 1 [PLACEHOLDER]</option>
+      </select>
+
+      <label for="issue-watchers">Watchers</label>
+      <select name="Issue Types" id="issue-watchers" multiple>
+        <option value="Design Changes">User 1 [PLACEHOLDER]</option>
+      </select>
+
+      <label for="issue-start-date">Start Date:</label>
+      <input type="date" id="issue-start-date" placeholder="Start Date" />
+
+      <label for="issue-due-date">Due Date:</label>
+      <input type="date" id="issue-due-date" placeholder="Due Date" />
+
+      <label for="issue-status">Status</label>
+      <select name="Issue Types" id="issue-status">
+        <option value="draft">Draft</option>
+        <option value="open" selected>Open</option>
+        <option value="pending">Pending</option>
+        <option value="in_review">In Review</option>
+        <option value="closed">Closed</option>
+      </select>
+
+      <label for="issue-placement">Placement</label>
+      <input type="text" id="issue-placement" placeholder="Placement" readonly="true"/>
+
+      <button type="submit"  id="save-issue-btn" class="save-issue-btn">Save Issue</button>
+      <button id="cancel-issue-btn" class="cancel-btn">Cancel</button>
+    </form>
   </div>
 </div>
   <!----------------------------- ISSUE REPORTING FORM DETAILS ----------------------------->
@@ -294,12 +342,14 @@
     window.USE_OPFS = true;
   </script>
   <script src="viewerSidebar.mjs"></script>
+  <script src="issueReporting.mjs"></script>
   <!-- <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script> -->
   <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.99/viewer3D.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
   <script src="https://unpkg.com/inspire-tree@4.3.1/dist/inspire-tree.js"></script>
   <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script type="module" src="./main.mjs"></script>
 </body>
 
