@@ -580,11 +580,9 @@ router.post('/api/acc/postissue', async (req, res) => {
 });
 
 
-
-
 // get issues
-router.post('/api/acc/getissues', async (req, res) => {
-  const { projectId, lineageUrn } = req.body;
+router.post('/api/acc/getTasks', async (req, res) => {
+  const { projectId, lineageUrn, issueTaskId } = req.body;
   const authHeader = req.headers.authorization;
   const authToken = authHeader?.split(' ')[1];
 
@@ -594,7 +592,46 @@ router.post('/api/acc/getissues', async (req, res) => {
 
   try {
     const issueListRes = await fetch(
-      `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?filter[linkedDocumentUrn]=${encodeURIComponent(lineageUrn)}`,
+      `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?filter[linkedDocumentUrn]=${encodeURIComponent(lineageUrn)}&filter[customAttributes][${issueTaskId}]=Task`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        }
+      }
+    );
+
+    const issueList = await issueListRes.json();
+
+    if (!issueListRes.ok) {
+      console.error("Issue fetch failed:", issueList);
+      return res.status(issueListRes.status).json(issueList);
+    }
+
+
+    console.log("Issue List:", issueList);
+    res.status(200).json({ message: 'Issue List retrieved', details: issueList });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+// get issues
+router.post('/api/acc/getissues', async (req, res) => {
+  const { projectId, lineageUrn, issueTaskId } = req.body;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  if (!projectId || !lineageUrn || !authToken) {
+    return res.status(400).json({ error: "Missing projectId, lineageUrn, or Authorization token" });
+  }
+
+  try {
+    const issueListRes = await fetch(
+      `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?filter[linkedDocumentUrn]=${encodeURIComponent(lineageUrn)}&filter[customAttributes][${issueTaskId}]=Issue`,
       {
         method: "GET",
         headers: {

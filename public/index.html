@@ -56,7 +56,7 @@
       <button class="control-btn" id="upload-files">
         <img src="images/file-upload.svg" alt="File Upload" />
       </button>
-      <button class="control-btn" id="issues">
+      <button class="control-btn" id="issues-tasks-sidebar">
         <img src="images/issue.svg" alt="Issues" />
       </button>
     </div>
@@ -233,13 +233,110 @@
 
 
 
+  
+
+    <!----------------------------- ISSUE & TASK FIRST PANEL ----------------------------->
+
+<!-- <button id="create-issue-btn" class="modern-upload-btn">Create Issue</button> -->
+<div class="issues-and-tasks" id="issues-and-tasks-panel">
+  <!-- Issues Section -->
+  <div class="list-section">
+    <div class="panel-header">
+      <button id="create-issue-btn-issue-task-panel" class="create-issue-btn icon-btn">+</button>
+      <h3 class="panel-title">List of Issues</h3>
+      <div class="header-actions">
+        <button id="issue-maximize-btn" class="icon-btn">
+          <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+        </button>
+        <button class="close-btn">✕</button>
+      </div>
+    </div>
+    <div class="issue-list-small-container">
+      <!-- List of issues -->
+      <div class="issue-small-card">
+        <span class="issue-small-number">1</span>
+        <span class="divider">|</span>
+        <span class="issue-small-title">Title: Test</span>
+      </div>
+      <div class="issue-small-card">
+        <span class="issue-small-number">2</span>
+        <span class="divider">|</span>
+        <span class="issue-small-title">Title: Test 1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks Section -->
+  <div class="list-section">
+    <div class="panel-header">
+      <button id="create-task-btn-issue-task-panel" class="icon-btn">+</button>
+      <h3 class="panel-title">List of Tasks</h3>
+      <div class="header-actions">
+        <button id="task-maximize-btn" class="icon-btn">
+          <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+        </button>
+        <button class="close-btn">✕</button>
+      </div>
+    </div>
+    <div class="task-list-small-container">
+      <!-- List of tasks -->
+      <div class="task-small-card">
+        <span class="task-small-number">1</span>
+        <span class="divider">|</span>
+        <span class="task-small-title">Title: Test</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!----------------------------- ISSUE & TASK FIRST PANEL ----------------------------->
+
+
+
+
+  <!----------------------------- TASK FIRST PANEL ----------------------------->
+
+<!-- <button id="create-issue-btn" class="modern-upload-btn">Create Issue</button> -->
+<div class="tasks" id="task-panel">
+  <div class="panel-header">
+    <button id="create-task-btn" class="icon-btn">+</button>
+    <h3 class="panel-title">List of Task</h3>
+    <div class="header-actions">
+      <button id="task-filter-btn" class="icon-btn"><i class="fa-solid fa-filter"></i></button>
+      <button class="close-btn">✕</button>
+    </div>
+  </div>
+
+  <div class="task-list-container">
+    <!-- List of issues -->
+    <!-- <div class="task-card" id="issue-1">
+      <div>Issue: [Title]</div>
+      <div>Type: <span></span> &nbsp; Status: <span></span></div>
+    </div>
+    <div class="issue-card" id="issue-1">
+      <div>Issue: Test</div>
+      <div>Type: <span></span></div>
+      <div>Status: <span></span></div>
+    </div> -->
+    <!-- Duplicate more issue-card blocks as needed -->
+  </div>
+</div>
+
+  <!----------------------------- TASK FIRST PANEL ----------------------------->
+
+
+
+  
+
+
 
   <!----------------------------- ISSUE REPORTING FIRST PANEL ----------------------------->
 
 <!-- <button id="create-issue-btn" class="modern-upload-btn">Create Issue</button> -->
 <div class="issues" id="issue-panel">
   <div class="panel-header">
-    <button id="create-issue-btn" class="icon-btn">+</button>
+    <button id="create-issue-btn" class="create-issue-btn icon-btn">+</button>
     <h3 class="panel-title">List of Issues</h3>
     <div class="header-actions">
       <button id="issue-filter-btn" class="icon-btn"><i class="fa-solid fa-filter"></i></button>
@@ -407,7 +504,7 @@
 
       <div class="form-group">
         <label for="issue-watchers" >Watchers</label>
-        <select id="issue-watchers" multiple required>
+        <select id="issue-watchers" name="issue-watchers" multiple required>
           <option value="user1">User 1 [PLACEHOLDER]</option>
         </select>
       </div>
@@ -454,13 +551,122 @@
   <!----------------------------- ISSUE REPORTING FORM DETAILS ----------------------------->
 
 
+
+
+
+
+
+   <!----------------------------- TASK FORM DETAILS ----------------------------->
+<div class="task-details" id="task-details-panel">
+  <div class="panel-header">
+    <h3>Task Form</h3>
+  </div>
+
+  <div class="task-type-selector"></div>
+
+  <div class="task-reporting-content">
+    <form id="task-form" class="task-reporting-content" style="display: none;">
+      
+      <div class="form-group">
+        <label for="task-title">Issue Title</label>
+        <input type="text" id="task-title" placeholder="Issue Title" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="task-types">Task Types</label>
+        <select name="Task Types Form" id="task-types" required>
+          <option value="Design Changes">Design Changes</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-task-field">Issue/Task</label>
+        <input type="text" id="issue-task-field" placeholder="Issue/Task" readonly required/>
+      </div>
+
+      <div class="form-group">
+        <label for="task-hard-asset">Hard Asset Name</label>
+        <input type="text" id="task-hard-asset" placeholder="Hard Asset Name" />
+      </div>
+
+      <div class="form-group">
+        <label for="task-functional-location">Functional Location</label>
+        <input type="text" id="task-functional-location" placeholder="Functional Location" />
+      </div>
+
+      <div class="form-group">
+        <label for="task-description">Description</label>
+        <textarea id="task-description" placeholder="Describe the issue..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="task-upload-input" class="custom-file-label">Attachment</label>
+        <input type="file" id="task-upload-input" class="hidden-file-input" />
+      </div>
+
+      <div class="form-group">
+        <label for="task-assigned-to">Assigned to</label>
+        <select name="Issue Types" id="task-assigned-to">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="task-watchers" >Watchers</label>
+        <select id="task-watchers" name="task-watchers" multiple required>
+          <option value="">N/A</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="task-start-date">Start Date:</label>
+        <input type="date" id="task-start-date" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="task-due-date">Due Date:</label>
+        <input type="date" id="task-due-date" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="task-status">Status</label>
+        <select id="task-status" required>
+          <option value="draft">Draft</option>
+          <option value="open" selected>Open</option>
+          <option value="pending">Pending</option>
+          <option value="in_review">In Review</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="task-placement">Placement</label>
+        <input type="text" id="task-placement" placeholder="Placement" readonly />
+      </div>
+
+      <div class="form-group">
+        <button type="submit" id="save-task-btn" class="save-task-btn">Save Task</button>
+      </div>
+
+      <div class="form-group">
+        <button type="button" id="cancel-task-btn" class="cancel-btn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+  <!----------------------------- TASK FORM DETAILS ----------------------------->
+
+
   <!-- <div id="preview"></div> -->
 
   <script>
     window.USE_OPFS = true;
   </script>
   <script src="viewerSidebar.mjs"></script>
-  <script src="issueReporting.mjs"></script>
+  <script src="issueTasksReporting.mjs"></script>
   <!-- <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script> -->
   <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.99/viewer3D.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>

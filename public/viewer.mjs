@@ -1,5 +1,5 @@
 import * as functions from './functions.mjs';
-import * as issuefunctions from './issueReporting.mjs';
+import * as issuefunctions from './issueTasksReporting.mjs';
 
 let viewerInstance;
 

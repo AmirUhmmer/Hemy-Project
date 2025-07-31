@@ -6,8 +6,26 @@
   display: none;
 }
 
+.issues-and-tasks {
+  font-family: ArtifaktElement;
+  visibility: hidden;
+  position: fixed;
+  top: 0;
+  left: 3%;
+  width: 25%;
+  height: 100vh;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: hidden;
+  gap: 12px; /* Optional spacing between sections */
+}
 
-.issues, .issues-details, .issues-filter {
+.issues, .issues-details, .issues-filter, .tasks, .task-details {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -44,14 +62,31 @@
   line-height: 1;
 }
 
-.issue-list-container {
+.issue-list-container,
+.task-list-container {
   overflow-y: auto;
   flex-grow: 1;
   border-top: 1px solid #ccc;
   padding-top: 8px;
 }
 
-.issue-card {
+.list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.issue-list-small-container,
+.task-list-small-container {
+  overflow-y: auto;
+  flex: 1;
+  border-top: 1px solid #ccc;
+  padding-top: 8px;
+}
+
+.issue-card,
+.task-card {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -59,16 +94,45 @@
   font-size: 14px;
 }
 
-.issue-card:hover {
+.issue-small-card,
+.task-small-card {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.issue-card:hover,
+.task-card:hover {
   cursor: pointer;
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
-.issue-card.selected {
+.issue-card.selected,
+.task-card.selected {
   background-color: #f0f0f0;
   font-weight: bold;
 }
+
+
+.task-small-number,
+.issue-small-number {
+  font-weight: bold;
+  color: #444;
+}
+
+.divider {
+  color: #ccc;
+}
+
+.task-small-title,
+.issue-small-title {
+  flex: 1;
+  color: #333;
+}
+
 
 /* ============================== ISSUE REPORTING ============================== */
 .form-group {
@@ -83,7 +147,10 @@
 .issue-reporting-content textarea,
 .issue-filter-content input,
 .issue-filter-content select,
-.issue-filter-content textarea {
+.issue-filter-content textarea,
+.task-reporting-content input,
+.task-reporting-content select,
+.task-reporting-content textarea{
   font-family: inherit;
   padding: 12px 14px;
   border: 1px solid #ccc;
@@ -99,7 +166,9 @@
 .issue-reporting-content input:focus,
 .issue-reporting-content textarea:focus,
 .issue-filter-content input:focus,
-.issue-filter-content textarea:focus {
+.issue-filter-content textarea:focus,
+.task-reporting-content input:focus,
+.task-reporting-content textarea:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
@@ -107,19 +176,22 @@
 }
 
 .issue-reporting-content textarea,
-.issue-filter-content textarea {
+.issue-filter-content textarea,
+.task-reporting-content textarea {
   resize: vertical;
   min-height: 100px;
 }
 
-.issue-type-selector {
+.issue-type-selector,
+.task-type-selector {
   padding: 10px;
   background-color: #f0f0f0;
   border-radius: 8px;
   margin-bottom: 20px;
 }
 
-.issue-group {
+.issue-group,
+.task-group {
   margin-bottom: 12px;
 }
 
@@ -130,7 +202,8 @@
   color: #555;
 }
 
-.issue-option {
+.issue-option,
+.task-option {
   padding: 10px 14px;
   border-radius: 6px;
   background-color: #fff;
@@ -140,11 +213,13 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.issue-option:hover {
+.issue-option:hover,
+.task-option:hover {
   background-color: #e6f0ff;
 }
 
-.issue-option.selected {
+.issue-option.selected,
+.task-option.selected {
   background-color: #1a73e8;
   color: white;
   border-color: #1a73e8;
@@ -153,7 +228,8 @@
 
 
 /* Target the Choices wrapper inside your issue-reporting-content */
-.issue-reporting-content .choices {
+.issue-reporting-content .choices,
+.task-reporting-content .choices {
   font-family: inherit;
   font-size: 14px;
   background-color: #f9f9f9;
@@ -163,13 +239,15 @@
 }
 
 /* Remove unnecessary extra spacing */
-.issue-reporting-content .choices__list--multiple {
+.issue-reporting-content .choices__list--multiple,
+.task-reporting-content .choices__list--multiple {
   padding: 0;
   margin: 0;
 }
 
 .save-issue-btn,
-.filter-issue-btn {
+.filter-issue-btn,
+.save-task-btn {
   background-color: #0a7720;
   color: white;
   border: none;

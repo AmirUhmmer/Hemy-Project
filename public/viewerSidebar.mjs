@@ -144,7 +144,7 @@ fileInput.addEventListener('change', () => {
 
 
 // ------------------------------------------ FILE UPLOAD BACKEND PROCESS ------------------------------------------------ 
-document.getElementById("issue-form").onsubmit = async (e) => {
+document.getElementById("upload-btn").onclick = async (e) => {
   const fileInput = document.getElementById("upload-input");
 
   if (!fileInput.files.length) return alert("Select a file");
