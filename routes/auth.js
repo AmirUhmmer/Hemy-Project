@@ -624,6 +624,81 @@ router.post('/api/acc/getissues', async (req, res) => {
 
 
 
+
+// get issues with filters
+router.post('/api/acc/getissuesFiltered', async (req, res) => {
+  const {
+    lineageUrn,
+    projectId,
+    issueType,
+    hardAsset,
+    hardAssetId,
+    functionalLocation,
+    functionalLocationId,
+    assignedTo,
+    startDate,
+    dueDate,
+    status
+  } = req.body;
+
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  if (!authToken) {
+    return res.status(400).json({ error: "Missing Authorization token" });
+  }
+
+  if (!projectId) {
+    return res.status(400).json({ error: "Missing projectId" });
+  }
+
+  try {
+    const queryParams = new URLSearchParams();
+
+    if (lineageUrn) queryParams.append("filter[linkedDocumentUrn]", lineageUrn);
+    if (issueType) queryParams.append("filter[issueSubtypeId]", issueType);
+    if (hardAsset && hardAssetId)
+      queryParams.append(`filter[customAttributes][${hardAssetId}]`, hardAsset);
+    if (functionalLocation && functionalLocationId)
+      queryParams.append(`filter[customAttributes][${functionalLocationId}]`, functionalLocation);
+    if (assignedTo) queryParams.append("filter[assignedTo]", assignedTo);
+    if (status) queryParams.append("filter[status]", status);
+
+    // Optional: future support for date range
+    // if (startDate) queryParams.append("filter[startDate]", startDate);
+    // if (dueDate) queryParams.append("filter[dueDate]", dueDate);
+
+    const url = `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?${queryParams.toString()}`;
+
+    const issueListRes = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      }
+    });
+
+    const issueList = await issueListRes.json();
+
+    if (!issueListRes.ok) {
+      console.error("Issue fetch failed:", issueList);
+      return res.status(issueListRes.status).json(issueList);
+    }
+
+    res.status(200).json({
+      message: 'Issue List retrieved',
+      details: issueList
+    });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
+
+
 // custom attributes
 router.post('/api/acc/getCustomAttributes', async (req, res) => {
   const { projectId } = req.body;

@@ -86,6 +86,7 @@ async function getContents(hubId, projectId, folderId = null) {
         .filter(item => item.type === 'items')
         .map(async item => {
             const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
+            window.modelName = item.attributes.displayName; // Store model name globally
             if (versions.length > 0) {
             const latest = versions[0];
             const node = createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');

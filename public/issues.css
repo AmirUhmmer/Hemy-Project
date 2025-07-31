@@ -1,6 +1,13 @@
 
 
-.issues, .issues-details {
+#toolbar-pushpinRfisVisibility,
+#toolbar-pushpinFieldIssuesVis,
+#toolbar-pushpinRfisVis {
+  display: none;
+}
+
+
+.issues, .issues-details, .issues-filter {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -64,9 +71,19 @@
 }
 
 /* ============================== ISSUE REPORTING ============================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+
 .issue-reporting-content input,
 .issue-reporting-content select,
-.issue-reporting-content textarea {
+.issue-reporting-content textarea,
+.issue-filter-content input,
+.issue-filter-content select,
+.issue-filter-content textarea {
   font-family: inherit;
   padding: 12px 14px;
   border: 1px solid #ccc;
@@ -74,19 +91,63 @@
   font-size: 14px;
   background-color: #f9f9f9;
   transition: border-color 0.3s, box-shadow 0.3s;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .issue-reporting-content input:focus,
-.issue-reporting-content textarea:focus {
+.issue-reporting-content textarea:focus,
+.issue-filter-content input:focus,
+.issue-filter-content textarea:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
   background-color: #fff;
 }
 
-.issue-reporting-content textarea {
+.issue-reporting-content textarea,
+.issue-filter-content textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.issue-type-selector {
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.issue-group {
+  margin-bottom: 12px;
+}
+
+.group-label {
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #555;
+}
+
+.issue-option {
+  padding: 10px 14px;
+  border-radius: 6px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.issue-option:hover {
+  background-color: #e6f0ff;
+}
+
+.issue-option.selected {
+  background-color: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
 }
 
 
@@ -101,38 +162,14 @@
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-/* Inner wrapper where selected items appear */
-/* .issue-reporting-content .choices__inner {
-  padding: 12px 14px;
-  border: none;
-  background-color: transparent;
-  min-height: auto;
-} */
-
-/* On focus state (same as your inputs) */
-/* .issue-reporting-content .choices.is-focused .choices__inner {
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-  background-color: #fff;
-} */
-
-/* Selected items (badges) inside multiple select */
-/* .issue-reporting-content .choices__list--multiple .choices__item {
-  background-color: #e8f0fe;
-  border: 1px solid #c6dafc;
-  border-radius: 6px;
-  padding: 4px 8px;
-  margin-right: 6px;
-  font-size: 13px;
-} */
-
 /* Remove unnecessary extra spacing */
 .issue-reporting-content .choices__list--multiple {
   padding: 0;
   margin: 0;
 }
 
-.save-issue-btn {
+.save-issue-btn,
+.filter-issue-btn {
   background-color: #0a7720;
   color: white;
   border: none;
@@ -141,13 +178,16 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  padding-bottom: 10px;
 }
 
-.save-issue-btn:hover {
+.save-issue-btn:hover,
+.filter-issue-btn:hover {
   background-color: #09611a;
 }
 
-.cancel-btn {
+.cancel-btn,
+.cancel-issue-filter-btn {
   background-color: #ec3a3a;
   color: white;
   border: none;
@@ -158,6 +198,24 @@
   transition: background-color 0.3s ease;
 }
 
-.cancel-btn:hover {
+.cancel-btn:hover,
+.cancel-issue-filter-btn:hover {
   background-color: #be2f2f;
+}
+
+
+.clear-issue-filter-btn {
+  background-color: #595a59;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  padding-bottom: 10px;
+}
+
+.clear-issue-filter-btn:hover {
+  background-color: #595a5998;
 }

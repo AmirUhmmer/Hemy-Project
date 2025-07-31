@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./issues.css" />
   <!-- <script src="https://cdn.tailwindcss.com"></script> -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <title>Hemy Projects</title>
 </head>
 <!-- test main branch -->
@@ -233,7 +234,7 @@
 
 
 
-  <!----------------------------- ISSUE REPORTING ----------------------------->
+  <!----------------------------- ISSUE REPORTING FIRST PANEL ----------------------------->
 
 <!-- <button id="create-issue-btn" class="modern-upload-btn">Create Issue</button> -->
 <div class="issues" id="issue-panel">
@@ -241,98 +242,215 @@
     <button id="create-issue-btn" class="icon-btn">+</button>
     <h3 class="panel-title">List of Issues</h3>
     <div class="header-actions">
-      <!-- <button id="filter-btn" class="icon-btn">🔍</button> -->
+      <button id="issue-filter-btn" class="icon-btn"><i class="fa-solid fa-filter"></i></button>
       <button class="close-btn">✕</button>
     </div>
   </div>
 
   <div class="issue-list-container">
     <!-- List of issues -->
-    <div class="issue-card" id="issue-1">
+    <!-- <div class="issue-card" id="issue-1">
       <div>Issue: [Title]</div>
       <div>Type: <span></span> &nbsp; Status: <span></span></div>
     </div>
-        <div class="issue-card" id="issue-1">
+    <div class="issue-card" id="issue-1">
       <div>Issue: Test</div>
       <div>Type: <span></span></div>
       <div>Status: <span></span></div>
-    </div>
+    </div> -->
     <!-- Duplicate more issue-card blocks as needed -->
   </div>
 </div>
 
-  <!----------------------------- ISSUE REPORTING ----------------------------->
+  <!----------------------------- ISSUE REPORTING FIRST PANEL ----------------------------->
+
+
+
+
+
+    <!----------------------------- ISSUE LIST FILTER ----------------------------->
+<div class="issues-filter" id="issue-filter-panel">
+  <div class="panel-header">
+    <h3>Issue Filter</h3>
+  </div>
+
+  <!-- Hidden Form Initially -->
+  <div class="issue-filter-content">
+    <form id="issue-filter-form" class="issue-filter-content">
+
+      <div class="form-group">
+        <label for="issue-types-filter">Issue Types</label>
+        <select name="Issue Types Form" id="issue-types-filter">
+          <option value="">N/A</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-filter-hard-asset">Hard Asset Name</label>
+        <input type="text" id="issue-filter-hard-asset" placeholder="Hard Asset Name" />
+      </div>
+
+      <div class="form-group">
+        <label for="issue-filter-functional-location">Functional Location</label>
+        <input type="text" id="issue-filter-functional-location" placeholder="Functional Location" />
+      </div>
+
+      <div class="form-group">
+        <label for="issue-filter-assigned-to">Assigned to</label>
+        <select name="Issue Types" id="issue-filter-assigned-to">
+          <option value="">N/A</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-filter-start-date">Start Date:</label>
+        <input type="date" id="issue-filter-start-date"/>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-filter-due-date">Due Date:</label>
+        <input type="date" id="issue-filter-due-date"/>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-filter-status">Status</label>
+        <select id="issue-filter-status">
+          <option value="draft">Draft</option>
+          <option value="open" selected>Open</option>
+          <option value="pending">Pending</option>
+          <option value="in_review">In Review</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <button type="submit" id="filter-issue-btn" class="filter-issue-btn">Filter Issues</button>
+      </div>
+
+      <div class="form-group">
+        <button type="button" id="cancel-issue-filter-btn" class="cancel-issue-filter-btn">Cancel</button>
+      </div>
+
+      <div class="form-group">
+        <button type="button" id="clear-issue-filter-btn" class="clear-issue-filter-btn">Clear Filters</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+  <!----------------------------- ISSUE LIST FILTER ----------------------------->
 
 
 
 
   <!----------------------------- ISSUE REPORTING FORM DETAILS ----------------------------->
-
 <div class="issues-details" id="issue-details-panel">
   <div class="panel-header">
     <h3>Issue Reporting</h3>
   </div>
+
+  <!-- Type Selector -->
+  <div class="issue-type-selector"></div>
+
+  <!-- Hidden Select (used for form submission) -->
+  <!-- <select id="issue-types" style="display: none;"></select> -->
+
+  <!-- Hidden Form Initially -->
   <div class="issue-reporting-content">
-    <form id="issue-form" class="issue-reporting-content">
-
-      <label for="issue-title">Issue Title</label>
-      <input type="text" id="issue-title" placeholder="Issue Title" />
-
-      <label for="issue-types">Issue Types</label>
-      <select name="Issue Types" id="issue-types">
-        <option value="Design Changes">Design Changes</option>
-        <option value="Others">Others</option>
-      </select>
-
-      <label for="issue-task">Issue/Task</label>
-      <input type="text" id="issue-task" placeholder="Issue/Task" readonly="true"/>
-
-      <label for="issue-hard-asset">Hard Asset Name</label>
-      <input type="text" id="issue-hard-asset" placeholder="Hard Asset Name"/>
-
-      <label for="issue-function-location">Functional Location</label>
-      <input type="text" id="issue-functional-location" placeholder="Functional Location"/>
-
-      <label for="issue-description">Description</label>
-      <textarea id="issue-description" placeholder="Describe the issue..."></textarea>
+    <form id="issue-form" class="issue-reporting-content" style="display: none;">
       
-      
-      <label for="issue-upload-input" class="custom-file-label">Attachment</label>
-      <input type="file" id="issue-upload-input" class="hidden-file-input" />
+      <div class="form-group">
+        <label for="issue-title">Issue Title</label>
+        <input type="text" id="issue-title" placeholder="Issue Title" required/>
+      </div>
 
-      <label for="issue-assigned-to">Assigned to</label>
-      <select name="Issue Types" id="issue-assigned-to">
-        <option value="Design Changes">User 1 [PLACEHOLDER]</option>
-      </select>
+      <div class="form-group">
+        <label for="issue-types">Issue Types</label>
+        <select name="Issue Types Form" id="issue-types" required>
+          <option value="Design Changes">Design Changes</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
 
-      <label for="issue-watchers">Watchers</label>
-      <select name="Issue Types" id="issue-watchers" multiple>
-        <option value="Design Changes">User 1 [PLACEHOLDER]</option>
-      </select>
+      <div class="form-group">
+        <label for="issue-task">Issue/Task</label>
+        <input type="text" id="issue-task" placeholder="Issue/Task" readonly required/>
+      </div>
 
-      <label for="issue-start-date">Start Date:</label>
-      <input type="date" id="issue-start-date" placeholder="Start Date" />
+      <div class="form-group">
+        <label for="issue-hard-asset">Hard Asset Name</label>
+        <input type="text" id="issue-hard-asset" placeholder="Hard Asset Name" />
+      </div>
 
-      <label for="issue-due-date">Due Date:</label>
-      <input type="date" id="issue-due-date" placeholder="Due Date" />
+      <div class="form-group">
+        <label for="issue-functional-location">Functional Location</label>
+        <input type="text" id="issue-functional-location" placeholder="Functional Location" />
+      </div>
 
-      <label for="issue-status">Status</label>
-      <select name="Issue Types" id="issue-status">
-        <option value="draft">Draft</option>
-        <option value="open" selected>Open</option>
-        <option value="pending">Pending</option>
-        <option value="in_review">In Review</option>
-        <option value="closed">Closed</option>
-      </select>
+      <div class="form-group">
+        <label for="issue-description">Description</label>
+        <textarea id="issue-description" placeholder="Describe the issue..."></textarea>
+      </div>
 
-      <label for="issue-placement">Placement</label>
-      <input type="text" id="issue-placement" placeholder="Placement" readonly="true"/>
+      <div class="form-group">
+        <label for="issue-upload-input" class="custom-file-label">Attachment</label>
+        <input type="file" id="issue-upload-input" class="hidden-file-input" />
+      </div>
 
-      <button type="submit"  id="save-issue-btn" class="save-issue-btn">Save Issue</button>
-      <button id="cancel-issue-btn" class="cancel-btn">Cancel</button>
+      <div class="form-group">
+        <label for="issue-assigned-to">Assigned to</label>
+        <select name="Issue Types" id="issue-assigned-to">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-watchers" >Watchers</label>
+        <select id="issue-watchers" multiple required>
+          <option value="user1">User 1 [PLACEHOLDER]</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-start-date">Start Date:</label>
+        <input type="date" id="issue-start-date" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-due-date">Due Date:</label>
+        <input type="date" id="issue-due-date" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-status">Status</label>
+        <select id="issue-status" required>
+          <option value="draft">Draft</option>
+          <option value="open" selected>Open</option>
+          <option value="pending">Pending</option>
+          <option value="in_review">In Review</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="issue-placement">Placement</label>
+        <input type="text" id="issue-placement" placeholder="Placement" readonly />
+      </div>
+
+      <div class="form-group">
+        <button type="submit" id="save-issue-btn" class="save-issue-btn">Save Issue</button>
+      </div>
+
+      <div class="form-group">
+        <button type="button" id="cancel-issue-btn" class="cancel-btn">Cancel</button>
+      </div>
     </form>
   </div>
 </div>
+
+
+
   <!----------------------------- ISSUE REPORTING FORM DETAILS ----------------------------->
 
 
