@@ -86,11 +86,12 @@ async function getContents(hubId, projectId, folderId = null) {
         .filter(item => item.type === 'items')
         .map(async item => {
             const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
-            window.modelName = item.attributes.displayName; // Store model name globally
+            
             if (versions.length > 0) {
             const latest = versions[0];
             const node = createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');
             node.itm = item.id; // ✅ lineage URN
+            node.modelName = item.attributes.displayName;
             return node;
             }
             return null;
@@ -158,7 +159,9 @@ export function initTree(selector, onSelectionChanged) {
         window.lineageUrn = itemUrn;
         window.versionUrn = versionUrn;
         window.projectId = projectId;
-
+        
+        window.modelName = node.modelName; // Store model name globally
+        
         console.log("🔑 Selected Version:", versionUrn);
         console.log("📁 Lineage URN:", itemUrn);
         console.log("🏗️ Project ID:", projectId);

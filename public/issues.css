@@ -25,7 +25,12 @@
   gap: 12px; /* Optional spacing between sections */
 }
 
-.issues, .issues-details, .issues-filter, .tasks, .task-details {
+.issues, 
+.issues-details, 
+.issues-filter, 
+.tasks, 
+.task-details,
+.tasks-filter {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -92,7 +97,39 @@
   border-radius: 4px;
   margin-bottom: 8px;
   font-size: 14px;
+  background-color: #fff;
+  position: relative;
 }
+
+.issue-card-layout {
+  display: flex;
+  align-items: stretch;
+  padding: 10px;
+  position: relative;
+}
+
+.issue-id-section {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.divider-big {
+  width: 2px;
+  background-color: #ccc;
+}
+
+.issue-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 12px; /* spacing from divider */
+  flex: 1;
+}
+
+
 
 .issue-small-card,
 .task-small-card {
@@ -104,14 +141,18 @@
 }
 
 .issue-card:hover,
-.task-card:hover {
+.issue-small-card:hover,
+.task-card:hover,
+.task-small-card:hover {
   cursor: pointer;
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
 .issue-card.selected,
-.task-card.selected {
+.issue-small-card.selected,
+.task-card.selected,
+.task-small-card.selected {
   background-color: #f0f0f0;
   font-weight: bold;
 }
@@ -150,7 +191,10 @@
 .issue-filter-content textarea,
 .task-reporting-content input,
 .task-reporting-content select,
-.task-reporting-content textarea{
+.task-reporting-content textarea,
+.task-filter-content input,
+.task-filter-content select,
+.task-filter-content textarea {
   font-family: inherit;
   padding: 12px 14px;
   border: 1px solid #ccc;
@@ -168,7 +212,9 @@
 .issue-filter-content input:focus,
 .issue-filter-content textarea:focus,
 .task-reporting-content input:focus,
-.task-reporting-content textarea:focus {
+.task-reporting-content textarea:focus,
+.task-filter-content input:focus,
+.task-filter-content textarea:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
@@ -177,7 +223,8 @@
 
 .issue-reporting-content textarea,
 .issue-filter-content textarea,
-.task-reporting-content textarea {
+.task-reporting-content textarea,
+.task-filter-content textarea {
   resize: vertical;
   min-height: 100px;
 }
@@ -247,7 +294,8 @@
 
 .save-issue-btn,
 .filter-issue-btn,
-.save-task-btn {
+.save-task-btn,
+.filter-task-btn {
   background-color: #0a7720;
   color: white;
   border: none;
@@ -260,12 +308,14 @@
 }
 
 .save-issue-btn:hover,
-.filter-issue-btn:hover {
+.filter-issue-btn:hover,
+.filter-task-btn:hover {
   background-color: #09611a;
 }
 
 .cancel-btn,
-.cancel-issue-filter-btn {
+.cancel-issue-filter-btn,
+.cancel-task-filter-btn {
   background-color: #ec3a3a;
   color: white;
   border: none;
@@ -277,12 +327,14 @@
 }
 
 .cancel-btn:hover,
-.cancel-issue-filter-btn:hover {
+.cancel-issue-filter-btn:hover,
+.cancel-task-filter-btn:hover {
   background-color: #be2f2f;
 }
 
 
-.clear-issue-filter-btn {
+.clear-issue-filter-btn,
+.clear-task-filter-btn {
   background-color: #595a59;
   color: white;
   border: none;
@@ -294,6 +346,7 @@
   padding-bottom: 10px;
 }
 
-.clear-issue-filter-btn:hover {
+.clear-issue-filter-btn:hover,
+.clear-task-filter-btn:hover {
   background-color: #595a5998;
 }

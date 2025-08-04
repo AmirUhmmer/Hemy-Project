@@ -1,10 +1,53 @@
 var viewer = window.viewerInstance;
+const taskTypeMap = {};
 // document.getElementById("issues-tasks-sidebar").addEventListener("click", createIssuePanel);
 document.getElementById("issues-tasks-sidebar").addEventListener("click", createIssueTaskPanel);
 document.getElementById("issue-maximize-btn").addEventListener("click", createIssuePanel);
 document.getElementById("task-maximize-btn").addEventListener("click", createTaskPanel);
 document.getElementById("issue-filter-btn").addEventListener("click", filterPanel);
+document.getElementById("task-filter-btn").addEventListener("click", taskFilterPanel);
 document.getElementById("clear-issue-filter-btn").addEventListener("click", resetIssueFilter);
+
+document.getElementById("close-task-btn").onclick = () => {
+  document.getElementById("task-panel").style.visibility = "hidden";
+  createIssueTaskPanel();
+}
+
+document.getElementById("close-issue-btn").onclick = () => {
+  document.getElementById("issue-panel").style.visibility = "hidden";
+  createIssueTaskPanel();
+}
+
+
+document.getElementById("cancel-task-btn").onclick = () => {
+  document.getElementById("task-form").reset;
+  const panel = document.getElementById("task-panel");
+  const issuePanel = document.getElementById("task-details-panel");
+  panel.style.visibility = "hidden";
+  issuePanel.style.visibility = "hidden";
+
+  document.getElementById("preview").style.width = "97%";
+  document.getElementById("task-form").style.display = "none"; // Hide the form
+  document.querySelector(".task-type-selector").style.display = "block"; // Show the issue type selector
+  setTimeout(() => {
+    window.viewerInstance.resize();
+  }, 300);
+
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  const pushpin_ext = window.viewerInstance.getExtension(extName);
+
+  if (pushpin_ext && pushpin_ext.pushPinManager) {
+    pushpin_ext.pushPinManager.removeAllItems(); // ✅ Remove pushpins
+  } else {
+    console.warn("PushPin extension is not loaded or has no pushPinManager");
+  }
+};
+
+document.getElementById("cancel-task-filter-btn").onclick = () => {
+  document.getElementById("task-filter-form").reset;
+  const issuePanel = document.getElementById("task-filter-panel");
+  issuePanel.style.visibility = "hidden";
+};
 
 document.getElementById("cancel-issue-btn").onclick = () => {
   document.getElementById("issue-form").reset;
@@ -264,6 +307,56 @@ document.getElementById("create-task-btn").onclick = async () => {
     };
   });
 }
+
+
+
+// ------------------------------------------ TASK FILTER SUBMIT ------------------------------------------------
+document.getElementById("task-filter-form").onsubmit = async (e) => {
+  e.preventDefault();
+  let params = new URLSearchParams(window.location.search);
+  const projectId = params.get("id");
+  const lineageUrn = window.lineageUrn;
+  const authToken = localStorage.getItem("authToken");
+  const issueType = document.getElementById("task-types-filter").value;
+  const hardAssetId = getAttrIdByTitle("Hard Asset Name");
+  const hardAsset = document.getElementById("task-filter-hard-asset").value;
+  const functionalLocation = document.getElementById("task-filter-functional-location").value;
+  const functionalLocationId = getAttrIdByTitle("Functional Location");
+  const assignedTo = document.getElementById("task-filter-assigned-to").value;
+  const startDate = document.getElementById("task-filter-start-date").value;
+  const dueDate = document.getElementById("task-filter-due-date").value;
+  const status = document.getElementById("task-filter-status").value;
+  const issueTaskId = getAttrIdByTitle("Issue/Task");
+  try {
+    const issueRes = await fetch("/api/acc/gettasksFiltered", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ lineageUrn, projectId, issueType, hardAsset, hardAssetId, functionalLocation, functionalLocationId, assignedTo, startDate, dueDate, status, issueTaskId }),
+    });
+
+    if (!issueRes.ok) {
+      const responseText = await issueRes.text();
+      throw new Error(
+        `❌ Failed to get issues. Status: ${issueRes.status}\n${responseText}`
+      );
+    }
+
+    const data = await issueRes.json();
+    showNotification("Task list retrieved successfully");
+
+    const issues = data.details?.results || [];
+    populateTaskListFiltered(issues); // function to populate the cards
+    document.getElementById("task-filter-panel").style.visibility = "hidden";
+    document.getElementById("task-panel").style.visibility = "visible";
+    // viewer.resize();
+  } catch (err) {
+    console.error(err);
+    alert("Error retrieving issues. See console for details.");
+  }
+};
 
 
 
@@ -531,7 +624,7 @@ document.getElementById("issue-filter-form").onsubmit = async (e) => {
     showNotification("Issue list retrieved successfully");
 
     const issues = data.details?.results || [];
-    populateIssueList(issues); // function to populate the cards
+    populateIssueListFiltered(issues); // function to populate the cards
     document.getElementById("issue-filter-panel").style.visibility = "hidden";
     document.getElementById("issue-panel").style.visibility = "visible";
     // viewer.resize();
@@ -586,6 +679,11 @@ async function resetIssueFilter() {
 
 
 
+
+
+
+
+
 // ------------------------------------------ ISSUE TASK PANEL ------------------------------------------------
 
 async function createIssueTaskPanel(){
@@ -614,12 +712,20 @@ async function createIssueTaskPanel(){
 
   // 🛑 Check if already populated
   const container = document.querySelector(".issue-list-container");
-  console.log("Issue list container children:", container.children.length);
-  console.log("Is issue list visible?", isVisible);
-  if (isVisible) {
+  if (panel.style.visibility === "hidden") {
     console.log("Issue list already populated. Skipping fetch.");
     return;
   }
+
+  // Load PushPin extension if not already loaded
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  let pushpin_ext = viewer.getExtension(extName);
+  if (!pushpin_ext) {
+    pushpin_ext = await viewer.loadExtension(extName);
+  }
+
+  pushpin_ext.pushPinManager.removeAllItems();
+
 
   const authToken = localStorage.getItem("authToken");
   let params = new URLSearchParams(window.location.search);
@@ -648,7 +754,7 @@ async function createIssueTaskPanel(){
     showNotification("Issue & Tasks list retrieved successfully");
 
     const issues = data.details?.results || [];
-    populateIssueList(issues);
+    await populateIssueList(issues);
 
     
 
@@ -673,7 +779,7 @@ async function createIssueTaskPanel(){
     showNotification("Issue & Tasks list retrieved successfully");
 
     const tasks = taskData.details?.results || [];
-    populateTaskList(tasks);
+    await populateTaskList(tasks);
 
     viewer.resize();
   } catch (err) {
@@ -695,6 +801,7 @@ async function createTaskPanel() {
 
   modelBrowserPanel.style.visibility = "hidden";
   filesPanel.style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
 
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
@@ -709,12 +816,19 @@ async function createTaskPanel() {
 
   // 🛑 Check if already populated
   const container = document.querySelector(".task-list-container");
-  console.log("Task list container children:", container.children.length);
-  console.log("Is task list visible?", isVisible);
-  if (isVisible || container.children.length > 0) {
+  if (isVisible) {
     console.log("Issue list already populated. Skipping fetch.");
     return;
   }
+
+  // Load PushPin extension if not already loaded
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  let pushpin_ext = viewer.getExtension(extName);
+  if (!pushpin_ext) {
+    pushpin_ext = await viewer.loadExtension(extName);
+  }
+
+  pushpin_ext.pushPinManager.removeAllItems();
 
   const authToken = localStorage.getItem("authToken");
   let params = new URLSearchParams(window.location.search);
@@ -743,13 +857,35 @@ async function createTaskPanel() {
     showNotification("Issue list retrieved successfully");
 
     const issues = data.details?.results || [];
-    populateTaskList(issues);
+    populateTaskListFiltered(issues);
     viewer.resize();
   } catch (err) {
     console.error(err);
     alert("Error retrieving issues. See console for details.");
   }
 }
+
+
+// ------------------------------------------ TASK FILTER PANEL ------------------------------------------------
+async function taskFilterPanel() {
+  const viewer = window.viewerInstance;
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const filesPanel = document.getElementById("fileContainer");
+  modelBrowserPanel.style.visibility = "hidden";
+  filesPanel.style.visibility = "hidden";
+
+  const panel = document.getElementById("task-filter-panel");
+  const isVisible = panel.style.visibility === "visible";
+  panel.style.visibility = isVisible ? "hidden" : "visible";
+  panel.style.visibility = isVisible
+    ? (document.getElementById("preview").style.width = "97%")
+    : (document.getElementById("preview").style.width = "72%");
+
+  setTimeout(() => {
+    window.viewerInstance.resize();
+  }, 300);
+}
+
 
 
 
@@ -762,6 +898,7 @@ async function createIssuePanel() {
 
   modelBrowserPanel.style.visibility = "hidden";
   filesPanel.style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
 
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
@@ -774,11 +911,21 @@ async function createIssuePanel() {
     viewer.fitToView();
   }, 300);
 
+    // Load PushPin extension if not already loaded
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  let pushpin_ext = viewer.getExtension(extName);
+  if (!pushpin_ext) {
+    pushpin_ext = await viewer.loadExtension(extName);
+  }
+
+  // pushpin_ext.pushPinManager.removeAllItems();
+
   // 🛑 Check if already populated
   const container = document.querySelector(".issue-list-container");
-  console.log("Issue list container children:", container.children.length);
-  console.log("Is issue list visible?", isVisible);
-  if (isVisible || container.children.length > 0) {
+  // console.log("Issue list container children:", container.children.length);
+  // console.log("Is issue list visible?", isVisible);
+
+  if (document.getElementById("issues-and-tasks-panel").style.visibility === "visible") {
     console.log("Issue list already populated. Skipping fetch.");
     return;
   }
@@ -810,7 +957,7 @@ async function createIssuePanel() {
     showNotification("Issue list retrieved successfully");
 
     const issues = data.details?.results || [];
-    populateIssueList(issues);
+    populateIssueListFiltered(issues);
     viewer.resize();
   } catch (err) {
     console.error(err);
@@ -865,7 +1012,7 @@ async function populateIssueList(issues) {
   }
 
   // Optional: clear existing pushpins
-  pushpin_ext.pushPinManager.removeAllItems();
+  // pushpin_ext.pushPinManager.removeAllItems();
 
   const pushpinItems = [];
 
@@ -876,10 +1023,18 @@ async function populateIssueList(issues) {
     const card = document.createElement("div");
     card.className = "issue-card";
     card.innerHTML = `
-          <div>Issue: ${issue.title || "[Untitled]"}</div>
-          <div>Type: ${issue.issueTypeId || "-"} </div> 
-          <div>Status: ${issue.status || "-"}</div>
-        `;
+      <div class="issue-card-layout">
+        <div class="issue-id-section">
+          <span class="issue-number">${issue.displayId || "-"}</span>
+        </div>
+        <div class="divider-big"></div>
+        <div class="issue-details">
+          <div class="issue-title"><strong>Issue: </strong> ${issue.title || "[Untitled]"}</div>
+          <div><strong>Type:</strong> ${taskTypeMap[issue.issueSubtypeId] || issue.issueSubtypeId || "-"}</div>
+          <div><strong>Status:</strong> ${issue.status || "-"}</div>
+        </div>
+      </div>
+    `;
     container.appendChild(card);
 
     const smallCard = document.createElement("div");
@@ -890,6 +1045,115 @@ async function populateIssueList(issues) {
       <span class="issue-small-title">Title: ${issue.title || "-"}</span> 
       `;
     smallContainer.appendChild(smallCard);
+
+    // 🟡 Collect pushpin if it's for the current viewable
+    if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
+      const pushpinItem = {
+        id: issue.id,
+        label: `#${issue.displayId} - ${issue.title}`,
+        status: issue.status,
+        position: linkedDoc.position,
+        objectId: linkedDoc.objectId,
+        viewerState: linkedDoc.viewerState,
+      };
+
+      pushpinItems.push(pushpinItem);
+
+      // 🔍 Restore viewer state on card click
+      card.addEventListener("click", () => {
+        if (linkedDoc.viewerState) {
+          viewer.restoreState(linkedDoc.viewerState);
+        }
+
+        // 🔄 Remove 'selected' from all cards
+        document
+          .querySelectorAll(".issue-card")
+          .forEach((c) => c.classList.remove("selected"));
+
+        // ✅ Mark this one as selected
+        card.classList.add("selected");
+
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+
+      smallCard.addEventListener("click", () => {
+        if (linkedDoc.viewerState) {
+          viewer.restoreState(linkedDoc.viewerState);
+        }
+
+        // 🔄 Remove 'selected' from all cards
+        document
+          .querySelectorAll(".issue-small-card")
+          .forEach((c) => c.classList.remove("selected"));
+
+        // ✅ Mark this one as selected
+        smallCard.classList.add("selected");
+
+        smallCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+  });
+
+  // 🟢 Load all pushpins once
+  if (pushpinItems.length > 0) {
+    pushpin_ext.loadItemsV2(pushpinItems);
+
+    // Update pin colors after a slight delay to let DOM render them
+    setTimeout(() => {
+      issues.forEach((issue) => {
+        const el = document.getElementById(issue.id);
+        if (el) {
+          el.style.backgroundColor = "#F54927"; // your custom red-orange
+          el.style.borderColor = "#702010ff"; // your custom red-orange
+        }
+      });
+    }, 200); // delay ensures elements are in DOM
+  }
+}
+
+
+
+// ------------------------------------------ POPULATE ISSUE LIST - FILTERED ------------------------------------------------
+async function populateIssueListFiltered(issues) {
+  const container = document.querySelector(".issue-list-container");
+  container.innerHTML = ""; // Clear old cards
+
+  const viewer = window.viewerInstance;
+  const viewerNode = viewer.model.getDocumentNode();
+
+  // Load PushPin extension if not already loaded
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  let pushpin_ext = viewer.getExtension(extName);
+  if (!pushpin_ext) {
+    pushpin_ext = await viewer.loadExtension(extName);
+  }
+
+  // Optional: clear existing pushpins
+  pushpin_ext.pushPinManager.removeAllItems();
+
+  const pushpinItems = [];
+
+  issues.forEach((issue) => {
+    const linkedDoc = issue.linkedDocuments?.[0]?.details;
+    
+    // 🟢 Render issue card
+    const card = document.createElement("div");
+    card.className = "issue-card";
+    card.innerHTML = `
+      <div class="issue-card-layout">
+        <div class="issue-id-section">
+          <span class="issue-number">${issue.displayId || "-"}</span>
+        </div>
+        <div class="divider-big"></div>
+        <div class="issue-details">
+          <div class="issue-title"><strong>Issue:</strong> ${issue.title || "[Untitled]"}</div>
+          <div><strong>Type:</strong>  ${taskTypeMap[issue.issueSubtypeId] || issue.issueSubtypeId || "-"}</div>
+          <div><strong>Status:</strong> ${issue.status || "-"}</div>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
 
     // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
@@ -933,6 +1197,7 @@ async function populateIssueList(issues) {
         const el = document.getElementById(issue.id);
         if (el) {
           el.style.backgroundColor = "#F54927"; // your custom red-orange
+          el.style.borderColor = "#702010ff"; // your custom red-orange
         }
       });
     }, 200); // delay ensures elements are in DOM
@@ -973,10 +1238,18 @@ async function populateTaskList(tasks) {
     const card = document.createElement("div");
     card.className = "issue-card";
     card.innerHTML = `
-          <div>Issue: ${task.title || "[Untitled]"}</div>
-          <div>Type: ${task.issueTypeId || "-"} </div> 
-          <div>Status: ${task.status || "-"}</div>
-        `;
+      <div class="issue-card-layout">
+        <div class="issue-id-section">
+          <span class="issue-number">${task.displayId || "-"}</span>
+        </div>
+        <div class="divider-big"></div>
+        <div class="issue-details">
+          <div class="issue-title"><strong>Task:</strong> ${task.title || "[Untitled]"}</div>
+          <div><strong>Type:</strong> ${taskTypeMap[task.issueSubtypeId] || task.issueSubtypeId || "-"}</div>
+          <div><strong>Status:</strong> ${task.status || "-"}</div>
+        </div>
+      </div>
+    `;
     container.appendChild(card);
 
     const smallCard = document.createElement("div");
@@ -987,6 +1260,116 @@ async function populateTaskList(tasks) {
       <span class="task-small-title">Title: ${task.title || "-"}</span> 
       `;
     smallContainer.appendChild(smallCard);
+
+    // 🟡 Collect pushpin if it's for the current viewable
+    if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
+      const pushpinItem = {
+        id: task.id,
+        label: `#${task.displayId} - ${task.title}`,
+        status: task.status,
+        position: linkedDoc.position,
+        objectId: linkedDoc.objectId,
+        viewerState: linkedDoc.viewerState,
+      };
+
+      pushpinItems.push(pushpinItem);
+
+      // 🔍 Restore viewer state on card click
+      card.addEventListener("click", () => {
+        if (linkedDoc.viewerState) {
+          viewer.restoreState(linkedDoc.viewerState);
+        }
+
+        // 🔄 Remove 'selected' from all cards
+        document
+          .querySelectorAll(".task-card")
+          .forEach((c) => c.classList.remove("selected"));
+
+        // ✅ Mark this one as selected
+        card.classList.add("selected");
+
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+
+      smallCard.addEventListener("click", () => {
+        if (linkedDoc.viewerState) {
+          viewer.restoreState(linkedDoc.viewerState);
+        }
+
+        // 🔄 Remove 'selected' from all cards
+        document
+          .querySelectorAll(".task-small-card")
+          .forEach((c) => c.classList.remove("selected"));
+
+        // ✅ Mark this one as selected
+        smallCard.classList.add("selected");
+
+        smallCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+  });
+
+  // 🟢 Load all pushpins once
+  if (pushpinItems.length > 0) {
+    pushpin_ext.loadItemsV2(pushpinItems);
+
+    // Update pin colors after a slight delay to let DOM render them
+    setTimeout(() => {
+      tasks.forEach((task) => {
+        const el = document.getElementById(task.id);
+        if (el) {
+          el.style.backgroundColor = "#21f900ff"; // green
+          el.style.borderColor = "#21f90063"; // green
+        }
+      });
+    }, 200); // delay ensures elements are in DOM
+  }
+}
+
+
+
+
+
+// ------------------------------------------ POPULATE TASK LIST - FILTERED ------------------------------------------------
+async function populateTaskListFiltered(tasks) {
+  const container = document.querySelector(".task-list-container");
+  container.innerHTML = ""; // Clear old cards
+
+  const viewer = window.viewerInstance;
+  const viewerNode = viewer.model.getDocumentNode();
+
+  // Load PushPin extension if not already loaded
+  const extName = "Autodesk.BIM360.Extension.PushPin";
+  let pushpin_ext = viewer.getExtension(extName);
+  if (!pushpin_ext) {
+    pushpin_ext = await viewer.loadExtension(extName);
+  }
+
+  // Optional: clear existing pushpins
+  pushpin_ext.pushPinManager.removeAllItems();
+
+  const pushpinItems = [];
+
+  tasks.forEach((task) => {
+    const linkedDoc = task.linkedDocuments?.[0]?.details;
+
+    // 🟢 Render issue card
+    const card = document.createElement("div");
+    card.className = "issue-card";
+    card.innerHTML = `
+      <div class="issue-card-layout">
+        <div class="issue-id-section">
+          <span class="issue-number">${task.displayId || "-"}</span>
+        </div>
+        <div class="divider-big"></div>
+        <div class="issue-details">
+          <div class="issue-title"><strong>Task:</strong> ${task.title || "[Untitled]"}</div>
+          <div><strong>Type:</strong> ${taskTypeMap[task.issueSubtypeId] || task.issueSubtypeId || "-"}</div>
+          <div><strong>Status:</strong> ${task.status || "-"}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
 
     // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
@@ -1029,13 +1412,13 @@ async function populateTaskList(tasks) {
       tasks.forEach((task) => {
         const el = document.getElementById(task.id);
         if (el) {
-          el.style.backgroundColor = "#21f900ff"; // your custom red-orange
+          el.style.backgroundColor = "#21f900ff"; // green color
+          el.style.borderColor = "#21f90063"; // green color
         }
       });
     }, 200); // delay ensures elements are in DOM
   }
 }
-
 
 
 
@@ -1068,11 +1451,11 @@ export async function loadIssueTypes(projectId, authToken) {
   const issueList = document.querySelector(".issue-type-selector");
 
   const taskSelect = document.getElementById("task-types");
-  // const taskFilter = document.getElementById("task-types-filter");
+  const taskFilter = document.getElementById("task-types-filter");
   const taskList = document.querySelector(".task-type-selector");
 
   issueSelect.innerHTML = "";
-  issueFilter.innerHTML = "";
+  // issueFilter.innerHTML = "";
   issueList.innerHTML = "<h4>Select Issue Type</h4>";
 
   taskSelect.innerHTML = "";
@@ -1105,6 +1488,8 @@ export async function loadIssueTypes(projectId, authToken) {
     type.subtypes.forEach((subtype) => {
       if (!subtype.isActive) return;
 
+      taskTypeMap[subtype.id] = subtype.title;
+
       // Issue select
       const issueOption = document.createElement("option");
       issueOption.value = subtype.id;
@@ -1134,7 +1519,7 @@ export async function loadIssueTypes(projectId, authToken) {
 
     if (taskOptgroup.children.length > 0) {
       taskSelect.appendChild(taskOptgroup);
-      // taskFilter.appendChild(taskOptgroup.cloneNode(true));
+      taskFilter.appendChild(taskOptgroup.cloneNode(true));
       taskList.appendChild(taskGroup);
     }
   });
@@ -1243,8 +1628,9 @@ async function getProjectMembers(projectId, authToken) {
   const select = document.getElementById("issue-assigned-to");
   const selectFilter = document.getElementById("issue-filter-assigned-to");
   const selectWatchers = document.getElementById("issue-watchers");
-  const selectWatchersTask = document.getElementById("task-watchers");
   const selectTask = document.getElementById("task-assigned-to");
+  const selectWatchersTask = document.getElementById("task-watchers");
+  const selectTaskFilter = document.getElementById("task-filter-assigned-to");
   select.innerHTML = ""; // clear old options
   selectWatchers.innerHTML = ""; // clear old options
   selectTask.innerHTML = ""; // clear old options
@@ -1258,6 +1644,7 @@ async function getProjectMembers(projectId, authToken) {
     select.appendChild(option);
     selectFilter.appendChild(option.cloneNode(true)); // Clone to filter select
     selectTask.appendChild(option.cloneNode(true)); // Clone to task select
+    selectTaskFilter.appendChild(option.cloneNode(true)); // Clone to task filter select
 
     const watcherOption = document.createElement("option");
     watcherOption.value = user.autodeskId;

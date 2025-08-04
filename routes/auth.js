@@ -1,9 +1,12 @@
 const express = require('express');
 const Axios = require('axios');
 const cors = require('cors'); // Import CORS
+const multer = require('multer');
 // const bodyParser = require('body-parser');
 const { getAuthorizationUrl, authCallbackMiddleware, authRefreshMiddleware, getUserProfile } = require('../services/aps.js');
 const { APS_CLIENT_ID, APS_CLIENT_SECRET } = require('../config.js');
+
+const upload = multer({ storage: multer.memoryStorage() }); // keeps file in memory
 
 var scopes = 'data:read data:write data:create';
 const querystring = require('querystring');
@@ -263,20 +266,21 @@ router.get('/api/acc/upload/signed-url', async (req, res) => {
 
 
 
-router.post('/api/acc/upload/execute', async (req, res) => {
-  const { signedUrl, base64File } = req.body;
-  if (!signedUrl || !base64File)
-    return res.status(400).json({ error: "Missing signedUrl or base64File" });
+router.post('/api/acc/upload/execute', upload.single('file'), async (req, res) => {
+  const { signedUrl } = req.body;
+  const file = req.file;
+
+  if (!signedUrl || !file)
+    return res.status(400).json({ error: "Missing signedUrl or file" });
 
   try {
-    const fileBuffer = Buffer.from(base64File, 'base64');
-
     const response = await fetch(signedUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/octet-stream',
+        'Content-Length': file.size,
       },
-      body: fileBuffer,
+      body: file.buffer,
     });
 
     if (!response.ok) {
@@ -291,7 +295,6 @@ router.post('/api/acc/upload/execute', async (req, res) => {
     res.status(500).json({ error: 'Upload failed', details: err.message });
   }
 });
-
 
 
 
@@ -619,6 +622,81 @@ router.post('/api/acc/getTasks', async (req, res) => {
 });
 
 
+// get tasks with filters
+router.post('/api/acc/gettasksFiltered', async (req, res) => {
+  const {
+    lineageUrn,
+    projectId,
+    issueType,
+    hardAsset,
+    hardAssetId,
+    functionalLocation,
+    functionalLocationId,
+    assignedTo,
+    startDate,
+    dueDate,
+    status,
+    issueTaskId
+  } = req.body;
+
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  if (!authToken) {
+    return res.status(400).json({ error: "Missing Authorization token" });
+  }
+
+  if (!projectId) {
+    return res.status(400).json({ error: "Missing projectId" });
+  }
+
+  try {
+    const queryParams = new URLSearchParams();
+
+    if (lineageUrn) queryParams.append("filter[linkedDocumentUrn]", lineageUrn);
+    if (issueType) queryParams.append("filter[issueSubtypeId]", issueType);
+    if (hardAsset && hardAssetId)
+      queryParams.append(`filter[customAttributes][${hardAssetId}]`, hardAsset);
+    if (functionalLocation && functionalLocationId)
+      queryParams.append(`filter[customAttributes][${functionalLocationId}]`, functionalLocation);
+    if (assignedTo) queryParams.append("filter[assignedTo]", assignedTo);
+    if (status) queryParams.append("filter[status]", status);
+
+    // Optional: future support for date range
+    // if (startDate) queryParams.append("filter[startDate]", startDate);
+    // if (dueDate) queryParams.append("filter[dueDate]", dueDate);
+
+    const url = `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?filter[customAttributes][${issueTaskId}]=Task&${queryParams.toString()}`;
+
+    const issueListRes = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      }
+    });
+
+    const issueList = await issueListRes.json();
+
+    if (!issueListRes.ok) {
+      console.error("Issue fetch failed:", issueList);
+      return res.status(issueListRes.status).json(issueList);
+    }
+
+    res.status(200).json({
+      message: 'Issue List retrieved',
+      details: issueList
+    });
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
+
+
 // get issues
 router.post('/api/acc/getissues', async (req, res) => {
   const { projectId, lineageUrn, issueTaskId } = req.body;
@@ -675,7 +753,8 @@ router.post('/api/acc/getissuesFiltered', async (req, res) => {
     assignedTo,
     startDate,
     dueDate,
-    status
+    status,
+    issueTaskId
   } = req.body;
 
   const authHeader = req.headers.authorization;
@@ -705,7 +784,7 @@ router.post('/api/acc/getissuesFiltered', async (req, res) => {
     // if (startDate) queryParams.append("filter[startDate]", startDate);
     // if (dueDate) queryParams.append("filter[dueDate]", dueDate);
 
-    const url = `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?${queryParams.toString()}`;
+    const url = `https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues?filter[customAttributes][${issueTaskId}]=Issue&${queryParams.toString()}`;
 
     const issueListRes = await fetch(url, {
       method: "GET",

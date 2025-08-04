@@ -151,7 +151,7 @@ document.getElementById("upload-btn").onclick = async (e) => {
 
   const filename = fileInput.files[0].name;
 
-  showInfoNotification("Processing your upload. Please wait...."); //show notif
+  showInfoNotification("Processing your upload. Please wait....");  //show notif
 
   let hubId = 'b.7a656dca-000a-494b-9333-d9012c464554';  // static hub ID
   let params = new URLSearchParams(window.location.search);
@@ -206,30 +206,20 @@ document.getElementById("upload-btn").onclick = async (e) => {
     const { urls, uploadKey } = await signedUrlRes.json();
     const signedUrl = urls[0];
   
-    // Step 3: Convert file to base64
-    const fileInput = document.getElementById("upload-input");
+    // Step 3: Get the file
     const file = fileInput.files[0];
     if (!file) return alert("No file selected");
   
-    const base64DataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-    });
-  
-    const base64Data = base64DataUrl.split(',')[1]; // Remove data: prefix
-  
-    // Step 4: Upload file to S3 via signed URL
+    // Step 4: Upload file to S3 via signed URL (through backend)
+    const formData = new FormData();
+    formData.append("file", file); // the actual file
+    formData.append("signedUrl", signedUrl); // send the signed S3 URL
+
     const uploadResp = await fetch('/api/acc/upload/execute', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        signedUrl,
-        base64File: base64Data
-      })
+      body: formData // don't set Content-Type, browser sets it with boundary
     });
-  
+
     if (!uploadResp.ok) throw new Error("Upload to S3 failed");
   
     // Step 5: Check if file already exists in folder (by filename)
@@ -268,8 +258,10 @@ document.getElementById("upload-btn").onclick = async (e) => {
     });
   
     if (!finalizeRes.ok) throw new Error("Finalize failed");
+    hideInfoNotification();
     showNotification("Upload complete!");
   } catch (err) {
+    hideInfoNotification();
     showErrorNotification("Upload failed: " + err.message);
   }
   
@@ -305,18 +297,24 @@ window.addEventListener("message", (event) => {
 // ----------------------------------------------------- EVENTS -----------------------------------------------------
 // ----------------------------------------------------- EVENTS -----------------------------------------------------
 
-function showInfoNotification(message) {
+function showInfoNotification(message, showLoader = true) {
   const notif = document.getElementById('notifInfo');
   const notifMessage = document.getElementById('notifInfo-message');
+  const loader = document.getElementById('notifInfo-loader');
+
   notifMessage.textContent = message;
+  loader.style.display = showLoader ? 'inline-block' : 'none';
+
   notif.classList.remove('hidden');
   notif.classList.add('show');
-
-  setTimeout(() => {
-    notif.classList.remove('show');
-    setTimeout(() => notif.classList.add('hidden'), 400); // Wait for transition
-  }, 5000); // Visible for 3 seconds
 }
+
+function hideInfoNotification() {
+  const notif = document.getElementById('notifInfo');
+  notif.classList.remove('show');
+  setTimeout(() => notif.classList.add('hidden'), 400);
+}
+
 
 function showNotification(message) {
   const notif = document.getElementById('notif');
