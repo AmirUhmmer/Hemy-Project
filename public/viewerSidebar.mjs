@@ -1,9 +1,12 @@
 const tabs = document.querySelectorAll(".tab");
 const contents = document.querySelectorAll(".tab-content");
 var viewer = window.viewerInstance;
-// const urn = viewer.getSeedUrn();
-// console.log("Model URN:", urn);
-// var models =  window.viewerInstance.impl.modelQueue().getModels()[0];
+
+document.getElementById("files").addEventListener("click", filesPanel);
+document.getElementById("sheets").addEventListener("click", sheetsPanel);
+document.getElementById("model-browser").addEventListener("click", modelBrowserPanel);
+document.getElementById("upload-files").addEventListener("click", fileUploadPanel);
+
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     tabs.forEach((t) => t.classList.remove("active"));
@@ -28,15 +31,6 @@ document.querySelector(".close-btn").addEventListener("click", () => {
     window.viewerInstance.fitToView();
   }, 300);
 });
-
-document.getElementById("sheets").addEventListener("click", sheetsPanel);
-document.getElementById("files").addEventListener("click", filesPanel);
-document
-  .getElementById("model-browser")
-  .addEventListener("click", modelBrowserPanel);
-document
-  .getElementById("upload-files")
-  .addEventListener("click", fileUploadPanel);
 
 
 document.getElementById("filter").addEventListener("keydown", function (event) {
@@ -269,10 +263,6 @@ document.getElementById("upload-btn").onclick = async (e) => {
 
 
 
-// ------------------------------------------ ISSUES LIST ------------------------------------------------ 
-
-
-
 
 
 window.svgData = window.svgData || [];
@@ -346,10 +336,11 @@ function showErrorNotification(message) {
 
 
 function sheetsPanel() {
-  const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("fileContainer");
-  modelBrowserPanel.style.visibility = "hidden";
-  filesPanel.style.visibility = "hidden";
+
+  document.getElementById("fileContainer").style.visibility = "hidden";
+  document.getElementById("model-browser-panel").style.visibility = "hidden";
+  document.getElementById("file-upload-panel").style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
 
   const panel = document.getElementById("sheetsPanel");
   const isVisible = panel.style.visibility === "visible";
@@ -504,10 +495,10 @@ function sheetsPanel() {
 }
 
 function filesPanel() {
-  const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const sheetsPanel = document.getElementById("sheetsPanel");
-  modelBrowserPanel.style.visibility = "hidden";
-  sheetsPanel.style.visibility = "hidden";
+  document.getElementById("model-browser-panel").style.visibility = "hidden";
+  document.getElementById("sheetsPanel").style.visibility = "hidden";
+  document.getElementById("file-upload-panel").style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
 
   const viewer = window.viewerInstance;
   const model = viewer.impl.modelQueue().getModels()[0];
@@ -528,10 +519,10 @@ function filesPanel() {
 }
 
 function modelBrowserPanel() {
-  const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("fileContainer");
-  modelBrowserPanel.style.visibility = "hidden";
-  filesPanel.style.visibility = "hidden";
+  document.getElementById("fileContainer").style.visibility = "hidden";
+  document.getElementById("sheetsPanel").style.visibility = "hidden";
+  document.getElementById("file-upload-panel").style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
 
   const panel = document.getElementById("model-browser-panel");
   const isVisible = panel.style.visibility === "visible";
@@ -613,10 +604,11 @@ function modelBrowserPanel() {
 }
 
 function fileUploadPanel() {
-  const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("fileContainer");
-  modelBrowserPanel.style.visibility = "hidden";
-  filesPanel.style.visibility = "hidden";
+
+  document.getElementById("fileContainer").style.visibility = "hidden";
+  document.getElementById("model-browser-panel").style.visibility = "hidden";
+  document.getElementById("sheetsPanel").style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
 
   const panel = document.getElementById("file-upload-panel");
   const isVisible = panel.style.visibility === "visible";

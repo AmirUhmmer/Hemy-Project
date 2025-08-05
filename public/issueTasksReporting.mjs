@@ -1,6 +1,6 @@
 var viewer = window.viewerInstance;
 const taskTypeMap = {};
-// document.getElementById("issues-tasks-sidebar").addEventListener("click", createIssuePanel);
+
 document.getElementById("issues-tasks-sidebar").addEventListener("click", createIssueTaskPanel);
 document.getElementById("issue-maximize-btn").addEventListener("click", createIssuePanel);
 document.getElementById("task-maximize-btn").addEventListener("click", createTaskPanel);
@@ -688,16 +688,20 @@ async function resetIssueFilter() {
 
 async function createIssueTaskPanel(){
   const viewer = window.viewerInstance;
-  const modelBrowserPanel = document.getElementById("model-browser-panel");
-  const filesPanel = document.getElementById("fileContainer");
+
   const panel = document.getElementById("issues-and-tasks-panel");
 
-  modelBrowserPanel.style.visibility = "hidden";
-  filesPanel.style.visibility = "hidden";
+  document.getElementById("fileContainer").style.visibility = "hidden";
+  document.getElementById("model-browser-panel").style.visibility = "hidden";
+  document.getElementById("sheetsPanel").style.visibility = "hidden";
+  document.getElementById("file-upload-panel").style.visibility = "hidden";
+
   document.getElementById("issue-panel").style.visibility = "hidden";
   document.getElementById("issue-details-panel").style.visibility = "hidden";
   document.getElementById("issue-filter-panel").style.visibility = "hidden";
   document.getElementById("task-panel").style.visibility = "hidden";
+  document.getElementById("task-details-panel").style.visibility = "hidden";
+  document.getElementById("task-filter-panel").style.visibility = "hidden";
 
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
@@ -710,14 +714,8 @@ async function createIssueTaskPanel(){
     viewer.fitToView();
   }, 300);
 
-  // 🛑 Check if already populated
-  const container = document.querySelector(".issue-list-container");
-  if (panel.style.visibility === "hidden") {
-    console.log("Issue list already populated. Skipping fetch.");
-    return;
-  }
 
-  // Load PushPin extension if not already loaded
+    // Load PushPin extension if not already loaded
   const extName = "Autodesk.BIM360.Extension.PushPin";
   let pushpin_ext = viewer.getExtension(extName);
   if (!pushpin_ext) {
@@ -725,6 +723,18 @@ async function createIssueTaskPanel(){
   }
 
   pushpin_ext.pushPinManager.removeAllItems();
+
+
+
+  // 🛑 Check if already populated
+  const container = document.querySelector(".issue-list-container");
+  if (panel.style.visibility === "hidden") {
+    console.log("Issue list hidden. Skipping fetch.");
+    pushpin_ext.pushPinManager.removeAllItems();
+    pushpin_ext.endCreateItem();
+
+    return;
+  }
 
 
   const authToken = localStorage.getItem("authToken");
