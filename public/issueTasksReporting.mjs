@@ -1,5 +1,6 @@
 var viewer = window.viewerInstance;
 const taskTypeMap = {};
+let watchersSelectEdit;
 
 document.getElementById("issues-tasks-sidebar").addEventListener("click", createIssueTaskPanel);
 document.getElementById("issue-maximize-btn").addEventListener("click", createIssuePanel);
@@ -7,6 +8,13 @@ document.getElementById("task-maximize-btn").addEventListener("click", createTas
 document.getElementById("issue-filter-btn").addEventListener("click", filterPanel);
 document.getElementById("task-filter-btn").addEventListener("click", taskFilterPanel);
 document.getElementById("clear-issue-filter-btn").addEventListener("click", resetIssueFilter);
+// document.getElementById("clear-task-filter-btn").addEventListener("click", resetTaskFilter);
+
+document.getElementById("edit-back-btn").addEventListener("click", () => {
+  const panel = document.getElementById("edit-details-panel");
+  panel.style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "visible";
+});
 
 document.getElementById("close-task-btn").onclick = () => {
   document.getElementById("task-panel").style.visibility = "hidden";
@@ -376,6 +384,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = "b." + params.get("id");
+  const hemyprojectId = params.get("hemyprojectId");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -409,7 +418,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
     document.getElementById("preview").style.width = "72%";
     document.getElementById("issue-task").value = "Issue";
     viewer.model.getData().name;
-    console.log("Model Name:", viewer.getVisibleModels());
+    // console.log("Model Name:", viewer.getVisibleModels());
 
     setTimeout(() => {
       window.viewerInstance.resize();
@@ -468,7 +477,9 @@ document.getElementById("create-issue-btn").onclick = async () => {
       let version = null;
 
       // subtype & wacthers
+      const issueTypesSelect = document.getElementById("issue-types");
       const subtypeId = document.getElementById("issue-types").value;
+      const selectedTypeText = issueTypesSelect.options[issueTypesSelect.selectedIndex].text; // text from <option>
       const watcherSelect = document.getElementById("issue-watchers");
       const selectedWatchers = Array.from(watcherSelect.selectedOptions).map(
         (opt) => opt.value
@@ -571,6 +582,29 @@ document.getElementById("create-issue-btn").onclick = async () => {
 
         document.getElementById("preview").style.width = "97%";
 
+        
+
+        // const hemyX = await fetch(
+        //   "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+        //   {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({
+        //       hemyprojectId: hemyprojectId,
+        //       issueId: data.id,
+        //       title: title,
+        //       types: selectedTypeText,
+        //       issuesTask: document.getElementById("issue-task").value,
+        //       HardAsset: document.getElementById("issue-hard-asset").value,
+        //       FunctionalLocation: document.getElementById("issue-functional-location").value,
+        //       description: document.getElementById("issue-description").value,
+        //       status: document.getElementById("issue-status").value,
+        //       placement: document.getElementById("issue-placement").value
+        //     }),
+        //   }
+        // );
+        
+
         setTimeout(() => {
           viewer.resize();
         }, 300);
@@ -582,6 +616,99 @@ document.getElementById("create-issue-btn").onclick = async () => {
   });
 };
 
+
+
+
+
+
+
+// ------------------------------------------ UPDATE ISSUE/TASK ------------------------------------------------
+document.getElementById("edit-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const authToken = localStorage.getItem("authToken");
+  const viewer = window.viewerInstance;
+  const panel = document.getElementById("edit-details-panel");
+  panel.style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "visible";
+  document.getElementById("preview").style.width = "97%";
+  let params = new URLSearchParams(window.location.search);
+  const projectId = params.get("id");
+
+  setTimeout(() => {
+    viewer.resize();
+  }, 300);
+
+  const pushpin_ext = await viewer.loadExtension(
+    "Autodesk.BIM360.Extension.PushPin"
+  );
+
+
+  // subtype & wacthers
+  const subtypeId = document.getElementById("edit-types").value;
+  const watcherSelect = document.getElementById("edit-watchers");
+  const selectedWatchers = Array.from(watcherSelect.selectedOptions).map((opt) => opt.value);
+  const assignSelect = document.getElementById("edit-assigned-to");
+  const assignedTo = assignSelect.value;
+  const assignedToType = assignSelect.selectedOptions[0]?.getAttribute("data-type");
+  const startDateRaw = document.getElementById("edit-start-date").value;
+  const dueDateRaw = document.getElementById("edit-due-date").value;
+
+  const startDate = startDateRaw ? new Date(startDateRaw).toISOString().split("T")[0] : null;
+  const dueDate = dueDateRaw ? new Date(dueDateRaw).toISOString().split("T")[0] : null;
+
+  const payload = {
+    title: document.getElementById("edit-title").value,
+    status: document.getElementById("edit-status").value,
+    description: document.getElementById("issue-description").value,
+    issueSubtypeId: subtypeId,
+    assignedTo: assignedTo,
+    assignedToType: assignedToType,
+    watchers: selectedWatchers,
+    startDate: startDate,
+    dueDate: dueDate,
+    customAttributes: [
+      {
+        attributeDefinitionId: getAttrIdByTitle("Hard Asset Name"),
+        value: document.getElementById("edit-hard-asset").value,
+      },
+      {
+        attributeDefinitionId: getAttrIdByTitle("Functional Location"),
+        value: document.getElementById("edit-functional-location").value,
+      },
+    ]
+  };
+
+  const issueId = document.getElementById("edit-panel-title").getAttribute("issue-id");
+  try {
+    const issueRes = await fetch("/api/acc/updateIssueTask", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ projectId, payload, issueId }), // ✅ send full payload
+    });
+
+    if (!issueRes.ok) {
+      const responseText = await issueRes.text();
+      showErrorNotification(`Error creating issue: ${responseText}`);
+    }
+
+    const data = await issueRes.json();
+    showNotification("Issue updated successfully");
+    document.getElementById("issue-details-panel").style.visibility = "hidden";
+
+    document.getElementById("preview").style.width = "97%";
+
+    setTimeout(() => {
+      viewer.resize();
+    }, 300);
+
+  } catch (err) {
+    console.error(err);
+    alert("Error creating issue. See console for details.");
+  }
+};
 
 
 
@@ -684,6 +811,12 @@ async function resetIssueFilter() {
 
 
 
+
+
+
+
+
+
 // ------------------------------------------ ISSUE TASK PANEL ------------------------------------------------
 
 async function createIssueTaskPanel(){
@@ -702,6 +835,7 @@ async function createIssueTaskPanel(){
   document.getElementById("task-panel").style.visibility = "hidden";
   document.getElementById("task-details-panel").style.visibility = "hidden";
   document.getElementById("task-filter-panel").style.visibility = "hidden";
+  document.getElementById("edit-details-panel").style.visibility = "hidden";
 
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
@@ -1029,6 +1163,11 @@ async function populateIssueList(issues) {
   issues.forEach((issue) => {
     const linkedDoc = issue.linkedDocuments?.[0]?.details;
 
+    // Extract values from customAttributes
+    const issueTask = issue.customAttributes?.find(attr => attr.title === "Issue/Task")?.value || "";
+    const hardAssetName = issue.customAttributes?.find(attr => attr.title === "Hard Asset Name")?.value || "";
+    const functionalLocation = issue.customAttributes?.find(attr => attr.title === "Functional Location")?.value || "";
+
     // 🟢 Render issue card
     const card = document.createElement("div");
     card.className = "issue-card";
@@ -1046,15 +1185,45 @@ async function populateIssueList(issues) {
       </div>
     `;
     container.appendChild(card);
+    card.addEventListener("dblclick", (e) => {
+      editIssueTask(issue.id, 
+                    issue.title, 
+                    issue.description, 
+                    issue.issueSubtypeId, 
+                    issue.status, 
+                    issue.assignedTo, 
+                    issue.startDate, 
+                    issue.dueDate, 
+                    issue.watchers,
+                    issueTask,
+                    hardAssetName,
+                    functionalLocation
+                  );
+    });
 
     const smallCard = document.createElement("div");
     smallCard.className = "issue-small-card";
     smallCard.innerHTML = `      
       <span class="issue-small-number">${issue.displayId || "-"}</span>
       <span class="divider">|</span>
-      <span class="issue-small-title">Title: ${issue.title || "-"}</span> 
+      <span class="issue-small-title">${issue.title || "-"}</span> 
       `;
     smallContainer.appendChild(smallCard);
+    smallCard.addEventListener("dblclick", (e) => {
+      editIssueTask(issue.id, 
+                    issue.title, 
+                    issue.description, 
+                    issue.issueSubtypeId, 
+                    issue.status, 
+                    issue.assignedTo, 
+                    issue.startDate, 
+                    issue.dueDate, 
+                    issue.watchers,
+                    issueTask,
+                    hardAssetName,
+                    functionalLocation
+                  );
+    });
 
     // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
@@ -1145,6 +1314,12 @@ async function populateIssueListFiltered(issues) {
 
   issues.forEach((issue) => {
     const linkedDoc = issue.linkedDocuments?.[0]?.details;
+
+
+    // Extract values from customAttributes
+    const issueTask = issue.customAttributes?.find(attr => attr.title === "Issue/Task")?.value || "";
+    const hardAssetName = issue.customAttributes?.find(attr => attr.title === "Hard Asset Name")?.value || "";
+    const functionalLocation = issue.customAttributes?.find(attr => attr.title === "Functional Location")?.value || "";
     
     // 🟢 Render issue card
     const card = document.createElement("div");
@@ -1164,6 +1339,22 @@ async function populateIssueListFiltered(issues) {
     `;
 
     container.appendChild(card);
+    card.addEventListener("dblclick", (e) => {
+      editIssueTask(issue.id, 
+                    issue.title, 
+                    issue.description, 
+                    issue.issueSubtypeId, 
+                    issue.status, 
+                    issue.assignedTo, 
+                    issue.startDate, 
+                    issue.dueDate, 
+                    issue.watchers,
+                    issueTask,
+                    hardAssetName,
+                    functionalLocation
+                  );
+    });
+
 
     // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
@@ -1244,6 +1435,11 @@ async function populateTaskList(tasks) {
   tasks.forEach((task) => {
     const linkedDoc = task.linkedDocuments?.[0]?.details;
 
+    // Extract values from customAttributes
+    const issueTask = task.customAttributes?.find(attr => attr.title === "Issue/Task")?.value || "";
+    const hardAssetName = task.customAttributes?.find(attr => attr.title === "Hard Asset Name")?.value || "";
+    const functionalLocation = task.customAttributes?.find(attr => attr.title === "Functional Location")?.value || "";
+
     // 🟢 Render issue card
     const card = document.createElement("div");
     card.className = "issue-card";
@@ -1261,15 +1457,47 @@ async function populateTaskList(tasks) {
       </div>
     `;
     container.appendChild(card);
+    card.addEventListener("dblclick", (e) => {
+      editIssueTask(task.id, 
+                    task.title, 
+                    task.description, 
+                    task.issueSubtypeId, 
+                    task.status, 
+                    task.assignedTo, 
+                    task.startDate, 
+                    task.dueDate, 
+                    task.watchers,
+                    issueTask,
+                    hardAssetName,
+                    functionalLocation
+                  );
+    });
+
 
     const smallCard = document.createElement("div");
     smallCard.className = "task-small-card";
     smallCard.innerHTML = `      
       <span class="task-small-number">${task.displayId || "-"}</span>
       <span class="divider">|</span>
-      <span class="task-small-title">Title: ${task.title || "-"}</span> 
+      <span class="task-small-title">${task.title || "-"}</span> 
       `;
     smallContainer.appendChild(smallCard);
+    smallCard.addEventListener("dblclick", (e) => {
+      editIssueTask(task.id, 
+                    task.title, 
+                    task.description, 
+                    task.issueSubtypeId, 
+                    task.status, 
+                    task.assignedTo, 
+                    task.startDate, 
+                    task.dueDate, 
+                    task.watchers,
+                    issueTask,
+                    hardAssetName,
+                    functionalLocation
+                  );
+    });
+
 
     // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
@@ -1329,7 +1557,7 @@ async function populateTaskList(tasks) {
         const el = document.getElementById(task.id);
         if (el) {
           el.style.backgroundColor = "#21f900ff"; // green
-          el.style.borderColor = "#21f90063"; // green
+          el.style.borderColor = "#09420063"; // green
         }
       });
     }, 200); // delay ensures elements are in DOM
@@ -1362,6 +1590,12 @@ async function populateTaskListFiltered(tasks) {
 
   tasks.forEach((task) => {
     const linkedDoc = task.linkedDocuments?.[0]?.details;
+    
+
+    // Extract values from customAttributes
+    const issueTask = task.customAttributes?.find(attr => attr.title === "Issue/Task")?.value || "";
+    const hardAssetName = task.customAttributes?.find(attr => attr.title === "Hard Asset Name")?.value || "";
+    const functionalLocation = task.customAttributes?.find(attr => attr.title === "Functional Location")?.value || "";
 
     // 🟢 Render issue card
     const card = document.createElement("div");
@@ -1380,6 +1614,21 @@ async function populateTaskListFiltered(tasks) {
       </div>
     `;
     container.appendChild(card);
+    card.addEventListener("dblclick", (e) => {
+      editIssueTask(task.id, 
+                    task.title, 
+                    task.description, 
+                    task.issueSubtypeId, 
+                    task.status, 
+                    task.assignedTo, 
+                    task.startDate, 
+                    task.dueDate, 
+                    task.watchers,
+                    issueTask,
+                    hardAssetName,
+                    functionalLocation
+                  );
+    });
 
     // 🟡 Collect pushpin if it's for the current viewable
     if (linkedDoc?.viewable?.guid === viewerNode.guid()) {
@@ -1423,7 +1672,7 @@ async function populateTaskListFiltered(tasks) {
         const el = document.getElementById(task.id);
         if (el) {
           el.style.backgroundColor = "#21f900ff"; // green color
-          el.style.borderColor = "#21f90063"; // green color
+          el.style.borderColor = "#09420063"; // green color
         }
       });
     }, 200); // delay ensures elements are in DOM
@@ -1464,6 +1713,8 @@ export async function loadIssueTypes(projectId, authToken) {
   const taskFilter = document.getElementById("task-types-filter");
   const taskList = document.querySelector(".task-type-selector");
 
+  const editSelect = document.getElementById("edit-types");
+
   issueSelect.innerHTML = "";
   // issueFilter.innerHTML = "";
   issueList.innerHTML = "<h4>Select Issue Type</h4>";
@@ -1471,6 +1722,9 @@ export async function loadIssueTypes(projectId, authToken) {
   taskSelect.innerHTML = "";
   // taskFilter.innerHTML = "";
   taskList.innerHTML = "<h4>Select Task Type</h4>";
+
+
+  editSelect.innerHTML = "";
 
   results.forEach((type) => {
     if (!type.isActive) return;
@@ -1531,6 +1785,10 @@ export async function loadIssueTypes(projectId, authToken) {
       taskSelect.appendChild(taskOptgroup);
       taskFilter.appendChild(taskOptgroup.cloneNode(true));
       taskList.appendChild(taskGroup);
+
+
+      // EDIT FORM
+      editSelect.appendChild(taskOptgroup.cloneNode(true));
     }
   });
 
@@ -1616,6 +1874,12 @@ function getAttrIdByTitle(title) {
   return match.id;
 }
 
+
+
+
+
+
+// ------------------------------------------ PROJECT MEMBERS ------------------------------------------------
 // project members elligble for being assigned to or being watcher
 async function getProjectMembers(projectId, authToken) {
   const res = await fetch("/api/acc/getProjectMembers", {
@@ -1641,6 +1905,8 @@ async function getProjectMembers(projectId, authToken) {
   const selectTask = document.getElementById("task-assigned-to");
   const selectWatchersTask = document.getElementById("task-watchers");
   const selectTaskFilter = document.getElementById("task-filter-assigned-to");
+  const selectEdit = document.getElementById("edit-assigned-to");
+  const selectWatchersEdit = document.getElementById("edit-watchers");
   select.innerHTML = ""; // clear old options
   selectWatchers.innerHTML = ""; // clear old options
   selectTask.innerHTML = ""; // clear old options
@@ -1655,6 +1921,7 @@ async function getProjectMembers(projectId, authToken) {
     selectFilter.appendChild(option.cloneNode(true)); // Clone to filter select
     selectTask.appendChild(option.cloneNode(true)); // Clone to task select
     selectTaskFilter.appendChild(option.cloneNode(true)); // Clone to task filter select
+    selectEdit.appendChild(option.cloneNode(true)); // Clone to edit select
 
     const watcherOption = document.createElement("option");
     watcherOption.value = user.autodeskId;
@@ -1662,9 +1929,13 @@ async function getProjectMembers(projectId, authToken) {
     watcherOption.setAttribute("data-type", "user"); // <-- Add this line
     selectWatchers.appendChild(watcherOption);
     selectWatchersTask.appendChild(watcherOption.cloneNode(true)); // Clone to task watchers select
+    selectWatchersEdit.appendChild(watcherOption.cloneNode(true)); // Clone to edit watchers select
   });
 }
 
+
+
+// ------------------------------------------ PROJECT MEMBERS - WATCHERS ------------------------------------------------
 // project members elligble for being assigned to or being watcher
 async function getCompanies(projectId, authToken) {
   const res = await fetch("/api/acc/getCompanies", {
@@ -1688,6 +1959,8 @@ async function getCompanies(projectId, authToken) {
   const selectTask = document.getElementById("task-assigned-to");
   const selectWatchers = document.getElementById("issue-watchers");
   const selectWatchersTask = document.getElementById("task-watchers");
+  const selectEdit = document.getElementById("edit-assigned-to");
+  const selectWatchersEdit = document.getElementById("edit-watchers");
 
   results.forEach((companies) => {
     const option = document.createElement("option");
@@ -1696,6 +1969,7 @@ async function getCompanies(projectId, authToken) {
     option.setAttribute("data-type", "company"); // <-- Add this line
     select.appendChild(option);
     selectTask.appendChild(option.cloneNode(true)); // Clone to task select
+    selectEdit.appendChild(option.cloneNode(true)); // Clone to edit select
 
     const watcherOption = document.createElement("option");
     watcherOption.value = companies.id;
@@ -1703,6 +1977,7 @@ async function getCompanies(projectId, authToken) {
     watcherOption.setAttribute("data-type", "company"); // <-- Add this line
     selectWatchers.appendChild(watcherOption);
     selectWatchersTask.appendChild(watcherOption.cloneNode(true)); // Clone to task watchers select
+    selectWatchersEdit.appendChild(watcherOption.cloneNode(true)); // Clone to edit watchers select
   });
 
   const watchersSelect = new Choices("#issue-watchers", {
@@ -1716,4 +1991,64 @@ async function getCompanies(projectId, authToken) {
     removeItemButton: true,
     shouldSort: false,
   });
+
+  watchersSelectEdit = new Choices("#edit-watchers", {
+    placeholderValue: "Select watchers",
+    removeItemButton: true,
+    shouldSort: false,
+  });
+}
+
+
+
+
+
+
+// ------------------------------------------ EDIT FORM ------------------------------------------------
+async function editIssueTask(id, title, description, issueSubtypeId, status, assignedTo, startDate, dueDate, watchers, issueTask, hardAssetName, functionalLocation) {
+  const viewer = window.viewerInstance;
+  const modelBrowserPanel = document.getElementById("model-browser-panel");
+  const filesPanel = document.getElementById("fileContainer");
+  const panel = document.getElementById("edit-details-panel");
+
+  modelBrowserPanel.style.visibility = "hidden";
+  filesPanel.style.visibility = "hidden";
+  document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
+
+  panel.style.visibility = "visible";
+  panel.style.visibility = (document.getElementById("preview").style.width = "72%");
+
+  setTimeout(() => {
+    viewer.resize();
+  }, 300);
+
+  // Clear previous form values
+  document.getElementById("edit-panel-title").value = "";
+  document.getElementById("edit-title").value = "";
+  document.getElementById("edit-issue-task-field").value = "";
+  document.getElementById("edit-hard-asset").value = "";
+  document.getElementById("edit-functional-location").value = "";
+  document.getElementById("edit-description").value = "";
+  document.getElementById("edit-start-date").value = "";
+  document.getElementById("edit-due-date").value = "";
+
+  // Populate form fields
+  document.getElementById("edit-panel-title").textContent = "Edit - " + title;
+  document.getElementById("edit-panel-title").setAttribute("issue-id", id);
+  document.getElementById("edit-title").value = title;
+  document.getElementById("edit-types").value = issueSubtypeId || "";
+  document.getElementById("edit-issue-task-field").value = issueTask || "";
+  document.getElementById("edit-hard-asset").value = hardAssetName || "";
+  document.getElementById("edit-functional-location").value = functionalLocation || "";
+  document.getElementById("edit-description").value = description || "";
+  document.getElementById("edit-assigned-to").value = assignedTo || "";
+  if (watchersSelectEdit) {
+    watchersSelectEdit.removeActiveItems(); // clear old selection
+    if (Array.isArray(watchers)) {
+      watchersSelectEdit.setChoiceByValue(watchers); // watchers is array of IDs
+    }
+  }
+  document.getElementById("edit-start-date").value = startDate || "";
+  document.getElementById("edit-due-date").value = dueDate || "";
+  document.getElementById("edit-placement").value = window.modelName || "";
 }

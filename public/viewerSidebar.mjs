@@ -18,6 +18,28 @@ tabs.forEach((tab) => {
   });
 });
 
+
+
+
+
+
+// ----------------------------------------- CLOSE BUTTONS FOR SIDEBAR PANELS ------------------------------------------
+
+// document.getElementById("close-btn-sheets").addEventListener("click", () => {
+//   document.getElementById("sheetsPanel").style.visibility = "hidden";
+//   document.getElementById("fileContainer").style.visibility = "hidden";
+//   document.getElementById("model-browser-panel").style.visibility = "hidden";
+//   document.getElementById("file-upload-panel").style.visibility = "hidden";
+//   document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
+//   document.getElementById("issue-details-panel").style.visibility = "hidden";
+  
+//   preview.style.width = "97%";
+//   setTimeout(() => {
+//     window.viewerInstance.resize();
+//     window.viewerInstance.fitToView();
+//   }, 300);
+// });
+
 document.querySelector(".close-btn").addEventListener("click", () => {
   document.getElementById("sheetsPanel").style.visibility = "hidden";
   document.getElementById("fileContainer").style.visibility = "hidden";
@@ -32,6 +54,10 @@ document.querySelector(".close-btn").addEventListener("click", () => {
   }, 300);
 });
 
+
+
+
+// ----------------------------------------- CLOSE BUTTONS FOR SIDEBAR PANELS ------------------------------------------
 
 document.getElementById("filter").addEventListener("keydown", function (event) {
   window.viewerInstance.search(
@@ -139,6 +165,7 @@ fileInput.addEventListener('change', () => {
 
 // ------------------------------------------ FILE UPLOAD BACKEND PROCESS ------------------------------------------------ 
 document.getElementById("upload-btn").onclick = async (e) => {
+  console.log("Upload Clicked");
   const fileInput = document.getElementById("upload-input");
 
   if (!fileInput.files.length) return alert("Select a file");

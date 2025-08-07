@@ -27,9 +27,34 @@ async function getJSON(url) {
 
 
 
-function createTreeNode(id, text, icon, children = false) {
-    return { id, text, children, itree: { icon } };
+function createTreeNode({
+  id,
+  text,
+  icon,
+  children = false,
+  description = '',
+  version = '--',
+  size = '--',
+  updatedAt = null,
+  updatedBy = '--',
+  updatedByInitials,
+  lineageUrn
+}) {
+  return {
+    id,
+    text,
+    children,
+    description,
+    version,
+    size,
+    updatedAt,
+    updatedBy,
+    updatedByInitials,
+    lineageUrn,
+    itree: { icon }
+  };
 }
+
 
 // async function getHubs() {
 //     const hubs = await getJSON('/api/hubs');
@@ -42,66 +67,117 @@ async function getProjects(hubId) {
 }
 
 async function getContents(hubId, projectId, folderId = null) {
+    // Show spinner
+    document.getElementById('file-loading-spinner')?.classList.remove('hidden');
+
     const contents = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents` + (folderId ? `?folder_id=${folderId}` : ''));
 
+    let result = [];
+
     if (!folderId) {
-        // Only return the "Project Files" folder
         const projectFilesFolder = contents.find(item =>
             item.type === 'folders' && item.attributes.displayName === 'Project Files'
         );
         if (projectFilesFolder) {
             window.projectFilesFolderId = projectFilesFolder.id;
-            return [createTreeNode(
-                `folder|${hubId}|${projectId}|${projectFilesFolder.id}`,
-                projectFilesFolder.attributes.displayName,
-                'icon-my-folder',
-                true
-            )];
-        } else {
-            return []; // No "Project Files" folder found
+            result = [createTreeNode({
+                id: `folder|${hubId}|${projectId}|${projectFilesFolder.id}`,
+                text: projectFilesFolder.attributes.displayName,
+                icon: 'icon-my-folder',
+                children: true,
+                size: formatSize(projectFilesFolder.attributes.storageSize || '--'),
+                updatedAt: formatDate(projectFilesFolder.attributes.lastModifiedTime || null),
+                updatedBy: projectFilesFolder.attributes.lastModifiedUserName || '--',
+                updatedByInitials: (projectFilesFolder.attributes.lastModifiedUserName || '--')
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase(),
+                description: projectFilesFolder.attributes.description || '',
+                version: '--'
+            })];
         }
     } else {
-        // We're inside "Project Files" or any subfolder
         const folderNodes = contents
             .filter(item => item.type === 'folders')
-            .map(folder => createTreeNode(
-                `folder|${hubId}|${projectId}|${folder.id}`,
-                folder.attributes.displayName,
-                'icon-my-folder',
-                true
-            ));
+            .map(folder => createTreeNode({
+                id: `folder|${hubId}|${projectId}|${folder.id}`,
+                text: folder.attributes.displayName,
+                icon: 'icon-my-folder',
+                children: true,
+                size: formatSize(folder.attributes.storageSize || '--'),
+                updatedAt: formatDate(folder.attributes.lastModifiedTime || null),
+                updatedBy: folder.attributes.lastModifiedUserName || '--',
+                updatedByInitials: (folder.attributes.lastModifiedUserName || '--')
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase(),
+                description: folder.attributes.description || '',
+                version: '--'
+            }));
 
-        // const itemVersionNodes = await Promise.all(contents
-        //     .filter(item => item.type === 'items')
-        //     .map(async item => {
-        //         const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
-        //         if (versions.length > 0) {
-        //             const latest = versions[0];
-        //             return createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');
-        //         }
-        //         return null;
-        //     }));
+        const itemVersionNodes = await Promise.all(
+            contents
+                .filter(item => item.type === 'items')
+                .map(async item => {
+                    const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
+                    if (versions.length > 0) {
+                        const latest = versions[0];
+                        // console.log('Latest: ', latest);
+                        return createTreeNode({
+                            id: `version|${latest.id}`,
+                            text: item.attributes.displayName,
+                            icon: 'icon-version',
+                            children: false,
+                            description: latest.attributes.description || '',
+                            version: latest.attributes.versionNumber || '--',
+                            indicators: latest.attributes.customMetadata?.indicators || '--',
+                            markups: latest.attributes.customMetadata?.markups || '--',
+                            issues: latest.attributes.customMetadata?.issues || '--',
+                            size: formatSize(latest.attributes.storageSize || '--'),
+                            updatedAt: formatDate(latest.attributes.lastModifiedTime || null),
+                            updatedBy: latest.attributes.lastModifiedUserName || '--',
+                            updatedByInitials: (latest.attributes.lastModifiedUserName || '--')
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')
+                                .toUpperCase(),
+                            lineageUrn: latest.relationships.item.data.id
+                        });
+                    }
+                    return null;
+                })
+        );
 
-        const itemVersionNodes = await Promise.all(contents
-        .filter(item => item.type === 'items')
-        .map(async item => {
-            const versions = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents/${item.id}/versions`);
-            
-            if (versions.length > 0) {
-            const latest = versions[0];
-            const node = createTreeNode(`version|${latest.id}`, item.attributes.displayName, 'icon-version');
-            node.itm = item.id; // ✅ lineage URN
-            node.modelName = item.attributes.displayName;
-            return node;
-            }
-            return null;
-        }));
-
-        
-
-        return [...folderNodes, ...itemVersionNodes.filter(n => n !== null)];
+        result = [...folderNodes, ...itemVersionNodes.filter(n => n !== null)];
     }
+
+    // Hide spinner
+    document.getElementById('file-loading-spinner')?.classList.add('hidden');
+
+    return result;
 }
+
+
+
+function formatSize(bytes) {
+    if (!bytes || bytes === '--') return '--';
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(2)} KB`;
+    const mb = kb / 1024;
+    if (mb < 1024) return `${mb.toFixed(2)} MB`;
+    const gb = mb / 1024;
+    return `${gb.toFixed(2)} GB`;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '--';
+    const date = new Date(dateString);
+    // Force just YYYY-MM-DD without time
+    return date.toISOString().split('T')[0];
+}
+
 
 
 
@@ -187,50 +263,147 @@ export async function renderCustomTree(onSelectionChanged) {
   const projectId = 'b.' + new URLSearchParams(window.location.search).get('id');
   const rootNodes = await getContents(hubId, projectId); // Project Files folder
 
-  const treeContainer = document.getElementById('tree');
-  treeContainer.innerHTML = '';
+  const tbody = document.querySelector('.file-table tbody');
+  tbody.innerHTML = '';
 
   for (const node of rootNodes) {
-    const div = document.createElement('div');
-    div.className = 'custom-node';
-    div.textContent = node.text;
-    div.dataset.nodeId = node.id;
+    const tr = appendNodeRow(tbody, node, hubId, projectId, onSelectionChanged);
 
-    if (node.id.startsWith('folder|')) {
-      div.classList.add('folder-node');
-      div.addEventListener('click', async () => {
-        const tokens = node.id.split('|');
-        const folderId = tokens[3];
-        const childNodes = await getContents(hubId, projectId, folderId);
+    console.log('rootNodes: ', rootNodes);
 
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'child-container';
+    // Auto-expand if it's "Project Files"
+    if (node.text.toLowerCase() === 'project files' && node.id.startsWith('folder|')) {
+      autoExpandFolder(tr, node, hubId, projectId, onSelectionChanged, 0);
+    }
+  }
+}
 
-        for (const child of childNodes) {
-          const childDiv = document.createElement('div');
-          childDiv.className = 'custom-node';
-          childDiv.textContent = child.text;
-          childDiv.dataset.nodeId = child.id;
+function appendNodeRow(tbody, node, hubId, projectId, onSelectionChanged, level = 0) {
+  const isFolder = node.id.startsWith('folder|');
 
-          if (child.id.startsWith('version|')) {
-            childDiv.classList.add('version-node');
-            childDiv.addEventListener('click', () => {
-              const versionId = child.id.split('|')[1];
-              onSelectionChanged(versionId);
-              document.getElementById('preview').classList.remove('hidden'); // match your HTML
-            });
-          }
+//   console.log('Node:', node);
 
-          childrenContainer.appendChild(childDiv);
+  const tr = document.createElement('tr');
+  tr.className = isFolder ? 'folder-row' : '';
+  tr.dataset.nodeId = node.id;
+  tr.dataset.level = level;
+
+  tr.innerHTML = `
+    <td style="padding-left:${20 * level}px;">
+      ${isFolder ? '<i class="fa fa-caret-right toggle-icon"></i> <i class="fa fa-folder"></i>' 
+                 : '<i class="fa fa-file"></i>'} ${node.text}
+    </td>
+    <td>${node.description || '--'}</td>
+    <td><span class="version-badge">${'V' + node.version || '--'}</td>
+    <td>${node.size || '--'}</td>
+    <td>${node.updatedAt ? new Date(node.updatedAt).toDateString() : '--'}</td>
+    <td><span class="user-badge">${node.updatedByInitials || '--'}</span> ${node.updatedBy || '--'}</td>
+  `;
+
+  if (isFolder) {
+    let expanded = false;
+    let childRows = [];
+
+    tr.addEventListener('click', async (e) => {
+      if (e.target.closest('.toggle-icon') || e.target.closest('td:nth-child(2)')) {
+        if (!expanded) {
+          const tokens = node.id.split('|');
+          const folderId = tokens[3];
+          const childNodes = await getContents(hubId, projectId, folderId);
+
+          childRows = childNodes.map(child => {
+            const childTr = appendNodeRow(tbody, child, hubId, projectId, onSelectionChanged, level + 1);
+            tr.insertAdjacentElement('afterend', childTr);
+            return childTr;
+          });
+
+          tr.querySelector('.toggle-icon').classList.replace('fa-caret-right', 'fa-caret-down');
+          expanded = true;
+        } else {
+          childRows.forEach(row => row.remove());
+          childRows = [];
+          tr.querySelector('.toggle-icon').classList.replace('fa-caret-down', 'fa-caret-right');
+          expanded = false;
         }
+      }
+    });
+  } else if (node.id.startsWith('version|')) {
+    tr.addEventListener('click', () => {
+      window.lineageUrn = node.lineageUrn;
+      window.modelName = node.text;
+      window.versionUrn =  node.id.split('|')[1];
+      const versionId = node.id.split('|')[1];
+      onSelectionChanged(versionId);
+      document.getElementById('preview').classList.remove('hidden');
+    });
+  }
 
-        // Prevent reloading same children again
-        if (!div.querySelector('.child-container')) {
-          div.appendChild(childrenContainer);
+  tbody.appendChild(tr);
+  return tr;
+}
+
+async function autoExpandFolder(tr, node, hubId, projectId, onSelectionChanged, level) {
+  const tokens = node.id.split('|');
+  const folderId = tokens[3];
+  const childNodes = await getContents(hubId, projectId, folderId);
+
+  let lastInserted = tr;
+  childNodes.forEach(child => {
+    const childTr = appendNodeRow(tr.parentElement, child, hubId, projectId, onSelectionChanged, level + 1);
+    lastInserted.insertAdjacentElement('afterend', childTr);
+    lastInserted = childTr;
+  });
+
+  const icon = tr.querySelector('.toggle-icon');
+  if (icon) {
+    icon.classList.replace('fa-caret-right', 'fa-caret-down');
+  }
+}
+
+
+
+
+
+export async function renderFileTable(hubId, projectId, folderId = null, onSelectionChanged) {
+  const contents = await getJSON(`/api/hubs/${hubId}/projects/${projectId}/contents` + 
+                                 (folderId ? `?folder_id=${folderId}` : ''));
+  const tbody = document.querySelector('.file-table tbody');
+  tbody.innerHTML = '';
+
+  contents.forEach(item => {
+    const isFolder = item.type === 'folders';
+    const latestVersion = item.latestVersion || {};
+    const updatedBy = latestVersion.updatedBy || '--';
+    const updatedByInitials = updatedBy.split(' ').map(n => n[0]).join('').toUpperCase();
+
+    const tr = document.createElement('tr');
+    tr.className = isFolder ? 'folder-row' : '';
+
+    tr.innerHTML = `
+      <td><input type="checkbox" /></td>
+      <td>${isFolder ? '<i class="fa fa-folder"></i>' : '<i class="fa fa-file"></i>'} ${item.attributes.displayName}</td>
+      <td>${item.attributes.description || ''}</td>
+      <td><span class="user-badge">V${latestVersion.version || '--'}</td>
+      <td>${latestVersion.size || '--'}</td>
+      <td>${latestVersion.updatedAt ? new Date(latestVersion.updatedAt).toLocaleString() : '--'}</td>
+      <td><span class="user-badge">${updatedByInitials}</span> ${updatedBy}</td>
+      <td>${latestVersion.versionAddedBy || '--'}</td>
+      <td><i class="fa fa-ellipsis-v"></i></td>
+    `;
+
+    if (isFolder) {
+      tr.addEventListener('click', () => {
+        // clicking a folder reloads the table with its contents
+        renderFileTable(hubId, projectId, item.id.split(':').pop(), onSelectionChanged);
+      });
+    } else {
+      tr.addEventListener('click', () => {
+        if (latestVersion.versionUrn) {
+          onSelectionChanged(latestVersion.versionUrn);
         }
       });
     }
 
-    treeContainer.appendChild(div);
-  }
+    tbody.appendChild(tr);
+  });
 }

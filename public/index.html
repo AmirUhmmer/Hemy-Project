@@ -72,7 +72,7 @@
 
   
   <!----------------------------- FILES ----------------------------->
-  <div id="fileContainer">
+  <!-- <div id="fileContainer">
     <div class="file-header">
       <h2 class="title">Files</h2>
       <div class="file-actions">
@@ -80,12 +80,68 @@
         <input id="searchInput" type="text" placeholder="Search files..." />
       </div>
     </div>
-    <div id="tree"></div> <!-- ← Populate this with your custom UI -->
+    <div id="tree"></div>
   </div>
 
-  <!-- Preview panel (optional) -->
-  <div id="preview" class="hidden"></div>
+  <div id="preview" class="hidden"></div> -->
 
+<div id="fileContainer" class="file-browser-layout modern-file-container">
+  <div class="file-main">
+    <div class="file-header">
+      <h2 class="title">Files</h2>
+      <div class="file-header-actions">
+        <!-- In file-browser-layout -->
+        <button class="upload-btn-landing" id="uploadBtn"><i class="fa fa-cloud-upload"></i> Upload files</button>
+        <!-- <button class="export-btn"><i class="fa fa-download"></i> Export</button> -->
+        <!-- <input class="search-filter" type="text" placeholder="Search and filter" /> -->
+        <!-- <button class="view-toggle"><i class="fa fa-th-list"></i></button> -->
+      </div>
+    </div>
+
+    <div id="file-loading-spinner" class="hidden">
+    <i class="fa fa-spinner fa-spin"></i> Loading...
+    </div>
+
+
+    <table class="file-table">
+      <thead>
+        <tr>
+          <!-- <th><input type="checkbox" /></th> -->
+          <th>Name</th>
+          <th>Description</th>
+          <th>Version</th>
+          <!-- <th>Indicators</th>
+          <th>Markups</th>
+          <th>Issues</th> -->
+          <th>Size</th>
+          <th>Last updated</th>
+          <th>Updated by</th>
+          <!-- <th>Version added by</th> -->
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Example row, fill dynamically from backend -->
+        <tr>
+          <td><input type="checkbox" /></td>
+          <td><i class="fa fa-folder"></i> AR</td>
+          <td></td>
+          <td>--</td>
+          <td>--</td>
+          <td>--</td>
+          <td>--</td>
+          <td>--</td>
+          <td>Jun 14, 2024 2:01 PM</td>
+          <!-- <td><span class="user-badge">DS</span> Dale Samosa</td> -->
+          <td>--</td>
+          <td><i class="fa fa-ellipsis-v"></i></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="preview"></div>
 
 
   <!----------------------------- FILES ----------------------------->
@@ -100,7 +156,7 @@
   <div id="sheetsPanel">
     <div class="panel-header">
       <h3>Sheets & Views</h3>
-      <button class="close-btn">✕</button>
+      <button class="close-btn-sheets">✕</button>
     </div>
     <div class="tab-bar">
       <button class="tab active" data-tab="tab2d">2D</button>
@@ -728,10 +784,112 @@
     </form>
   </div>
 </div>
-
-
-
   <!----------------------------- TASK FORM DETAILS ----------------------------->
+
+
+  
+
+  <!----------------------------- EDIT FORM DETAILS ----------------------------->
+<div class="edit-details" id="edit-details-panel">
+  <div class="panel-header">
+    <h3 class="panel-title" id="edit-panel-title">Edit - </h3>
+    <div class="header-actions">
+      <button id="edit-back-btn" class="icon-btn">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="edit-reporting-content">
+    <form id="edit-form" class="edit-reporting-content">
+      
+      <div class="form-group">
+        <label for="edit-title">Title</label>
+        <input type="text" id="edit-title" placeholder="Title" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-types">Types</label>
+        <select name="Types Form" id="edit-types" required>
+          <option value="Design Changes">Design Changes</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-issue-task-field">Issue/Task</label>
+        <input type="text" id="edit-issue-task-field" placeholder="Issue/Task" readonly required/>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-hard-asset">Hard Asset Name</label>
+        <input type="text" id="edit-hard-asset" placeholder="Hard Asset Name" />
+      </div>
+
+      <div class="form-group">
+        <label for="edit-functional-location">Functional Location</label>
+        <input type="text" id="edit-functional-location" placeholder="Functional Location" />
+      </div>
+
+      <div class="form-group">
+        <label for="edit-description">Description</label>
+        <textarea id="edit-description" placeholder="Describe the issue..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-upload-input" class="custom-file-label">Attachment</label>
+        <input type="file" id="edit-upload-input" class="hidden-file-input" />
+      </div>
+
+      <div class="form-group">
+        <label for="edit-assigned-to">Assigned to</label>
+        <select name="Issue Types" id="edit-assigned-to">
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-watchers">Watchers</label>
+        <select id="edit-watchers" name="edit-watchers" multiple required>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-start-date">Start Date:</label>
+        <input type="date" id="edit-start-date" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-due-date">Due Date:</label>
+        <input type="date" id="edit-due-date" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-status">Status</label>
+        <select id="edit-status" required>
+          <option value="draft">Draft</option>
+          <option value="open" selected>Open</option>
+          <option value="pending">Pending</option>
+          <option value="in_review">In Review</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-placement">Placement</label>
+        <input type="text" id="edit-placement" placeholder="Placement" readonly />
+      </div>
+
+      <div class="form-group">
+        <button type="submit" id="save-edit-btn" class="save-edit-btn">Update</button>
+      </div>
+
+      <!-- <div class="form-group">
+        <button type="button" id="cancel-task-btn" class="cancel-btn">Cancel</button>
+      </div> -->
+    </form>
+  </div>
+</div>
+  <!----------------------------- EDIT FORM DETAILS ----------------------------->
 
 
   <!-- <div id="preview"></div> -->
@@ -739,8 +897,6 @@
   <script>
     window.USE_OPFS = true;
   </script>
-  <script src="viewerSidebar.mjs"></script>
-  <script src="issueTasksReporting.mjs"></script>
   <!-- <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script> -->
   <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.99/viewer3D.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
@@ -749,6 +905,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script type="module" src="./main.mjs"></script>
+  <script src="viewerSidebar.mjs"></script>
+  <script src="issueTasksReporting.mjs"></script>
 </body>
 
 </html>

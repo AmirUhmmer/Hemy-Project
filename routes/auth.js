@@ -522,6 +522,48 @@ router.get('/api/acc/getIssueType', async (req, res) => {
 
 
 
+
+
+// update issue or task
+router.post('/api/acc/updateIssueTask', async (req, res) => {
+  const { projectId, payload, issueId } = req.body;
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader?.split(' ')[1];
+
+  console.log("Initialize: ", projectId, payload)
+  if (!projectId) {
+    return res.status(400).json({ error: "Missing projectId or title" });
+  }
+
+  try {
+    const projectRes = await fetch(
+      `	https://developer.api.autodesk.com/construction/issues/v1/projects/${projectId}/issues/${issueId}`,
+      {
+        method: "PATCH",
+        headers: {
+          'Authorization': `Basic ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    const projectData = await projectRes.json();
+    if (!projectRes.ok) {
+      console.error("Project fetch failed:", projectData);
+      return res.status(projectRes.status).json(projectData);
+    }
+
+    res.status(200).json({ message: 'Issue updated successfully'});
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Unexpected error", details: err.message });
+  }
+});
+
+
+
 // post or create issue
 router.post('/api/acc/postissue', async (req, res) => {
   const { projectId, payload, title } = req.body;

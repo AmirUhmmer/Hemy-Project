@@ -30,7 +30,8 @@
 .issues-filter, 
 .tasks, 
 .task-details,
-.tasks-filter {
+.tasks-filter,
+.edit-details {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -48,7 +49,9 @@
   overflow: scroll; /* Prevent outer scrollbars */
 }
 
-.issue-reporting-content {
+.issue-reporting-content,
+.task-reporting-content,
+.edit-reporting-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -194,7 +197,10 @@
 .task-reporting-content textarea,
 .task-filter-content input,
 .task-filter-content select,
-.task-filter-content textarea {
+.task-filter-content textarea,
+.edit-reporting-content input,
+.edit-reporting-content select,
+.edit-reporting-content textarea {
   font-family: inherit;
   padding: 12px 14px;
   border: 1px solid #ccc;
@@ -214,7 +220,9 @@
 .task-reporting-content input:focus,
 .task-reporting-content textarea:focus,
 .task-filter-content input:focus,
-.task-filter-content textarea:focus {
+.task-filter-content textarea:focus,
+.edit-reporting-content input:focus,
+.edit-reporting-content textarea:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
@@ -224,13 +232,15 @@
 .issue-reporting-content textarea,
 .issue-filter-content textarea,
 .task-reporting-content textarea,
-.task-filter-content textarea {
+.task-filter-content textarea,
+.edit-reporting-content textarea {
   resize: vertical;
   min-height: 100px;
 }
 
 .issue-type-selector,
-.task-type-selector {
+.task-type-selector,
+.edit-type-selector {
   padding: 10px;
   background-color: #f0f0f0;
   border-radius: 8px;
@@ -250,7 +260,8 @@
 }
 
 .issue-option,
-.task-option {
+.task-option,
+.edit-options {
   padding: 10px 14px;
   border-radius: 6px;
   background-color: #fff;
@@ -261,12 +272,14 @@
 }
 
 .issue-option:hover,
-.task-option:hover {
+.task-option:hover,
+.edit-option:hover {
   background-color: #e6f0ff;
 }
 
 .issue-option.selected,
-.task-option.selected {
+.task-option.selected,
+.edit-option.selected {
   background-color: #1a73e8;
   color: white;
   border-color: #1a73e8;
@@ -295,7 +308,8 @@
 .save-issue-btn,
 .filter-issue-btn,
 .save-task-btn,
-.filter-task-btn {
+.filter-task-btn,
+.save-edit-btn {
   background-color: #0a7720;
   color: white;
   border: none;

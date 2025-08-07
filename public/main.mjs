@@ -1,5 +1,5 @@
 import { initViewer, loadModel } from './viewer.mjs';
-import { renderCustomTree, initTree } from './sidebar.mjs';
+import { renderFileTable, renderCustomTree, initTree } from './sidebar.mjs';
 
 const login = document.getElementById('login');
 
@@ -54,33 +54,33 @@ async function initApp() {
     }
 }
 
-async function startApp() {
-    const viewer = await initViewer(document.getElementById("preview"));
-    // initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
-    initTree('#tree', (version, item, project) => {
-
-        // 🔐 Store in localStorage for later use in issue creation
-        window.lineageUrn = item; // `item` is the lineage URN
-
-        // console.log("🔑 Selected version:", window.lineageUrn);
-
-        // 👇 Load the model as before
-        loadModel(viewer, window.btoa(version).replace(/=/g, '').replace(/\//g, '_'));
-    });
-
-}
-
-
-
 // async function startApp() {
-//   const viewer = await initViewer(document.getElementById("preview"));
-//   renderCustomTree((versionId) => {
-//     // 👇 If you're still using base64 for loading models
-//     const encodedUrn = window.btoa(versionId).replace(/=/g, '');
-//     console.log("URN: ", encodedUrn);
-//     document.getElementById('preview').classList.add('active');
-//     loadModel(viewer, encodedUrn);
-//   });
+//     const viewer = await initViewer(document.getElementById("preview"));
+//     // initTree('#tree', (id) => loadModel(viewer, window.btoa(id).replace(/=/g, '')));
+//     initTree('#tree', (version, item, project) => {
+
+//         // 🔐 Store in localStorage for later use in issue creation
+//         window.lineageUrn = item; // `item` is the lineage URN
+
+//         // console.log("🔑 Selected version:", window.lineageUrn);
+
+//         // 👇 Load the model as before
+//         loadModel(viewer, window.btoa(version).replace(/=/g, '').replace(/\//g, '_'));
+//     });
+
 // }
+
+
+
+async function startApp() {
+  const viewer = await initViewer(document.getElementById("preview"));
+  renderCustomTree((versionId) => {
+    // 👇 If you're still using base64 for loading models
+    const encodedUrn = window.btoa(versionId).replace(/=/g, '');
+    console.log("URN: ", encodedUrn);
+    document.getElementById('preview').classList.add('active');
+    loadModel(viewer, encodedUrn);
+  });
+}
 
 initApp();
