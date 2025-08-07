@@ -236,10 +236,20 @@ document.getElementById("upload-btn").onclick = async (e) => {
     formData.append("file", file); // the actual file
     formData.append("signedUrl", signedUrl); // send the signed S3 URL
 
-    const uploadResp = await fetch('/api/acc/upload/execute', {
-      method: 'POST',
-      body: formData // don't set Content-Type, browser sets it with boundary
+    // const uploadResp = await fetch('/api/acc/upload/execute', {
+    //   method: 'POST',
+    //   body: formData // don't set Content-Type, browser sets it with boundary
+    // });
+
+    const uploadResp = await fetch(signedUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': file.size
+      },
+      body: file
     });
+
 
     if (!uploadResp.ok) throw new Error("Upload to S3 failed");
   
