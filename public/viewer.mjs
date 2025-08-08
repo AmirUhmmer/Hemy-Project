@@ -90,6 +90,7 @@ export function loadModel(viewer, urn) {
                 const projectId = params.get('id');
                 const authToken = localStorage.getItem('authToken');
                 issuefunctions.loadIssueTypes(projectId, authToken);
+
             }
         }
     }

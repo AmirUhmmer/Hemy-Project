@@ -259,7 +259,7 @@ body.preview-active #fileContainer {
   background: #1d4ed8;
 }
 
-.search-filter {
+/* .search-filter {
   flex: 1;
   padding: 8px 14px;
   border: 1.5px solid #cbd5e1;
@@ -267,7 +267,7 @@ body.preview-active #fileContainer {
   font-size: 15px;
   background: #f1f5f9;
   margin-left: 12px;
-}
+} */
 
 /* NEW — Inline folder tree above table */
 .file-tree-inline {
@@ -776,6 +776,25 @@ body.preview-active #fileContainer {
   border-radius: 6px;
   padding: 16px;
   overflow: hidden; /* Prevent outer scrollbars */
+}
+
+
+.model-browser select,
+.model-browser textarea {
+  font-family: inherit;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.design-option-field {
+  padding-top: 10px;
 }
 
 .tree {

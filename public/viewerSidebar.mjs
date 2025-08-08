@@ -555,6 +555,10 @@ function filesPanel() {
   }, 300);
 }
 
+
+
+// -------------------------------------------- MODEL BROWSER ---------------------------------------------------
+
 function modelBrowserPanel() {
   document.getElementById("fileContainer").style.visibility = "hidden";
   document.getElementById("sheetsPanel").style.visibility = "hidden";
@@ -577,6 +581,9 @@ function modelBrowserPanel() {
   const model = viewer.impl.modelQueue().getModels()[0];
   const instanceTree = model.getData().instanceTree;
   const rootId = instanceTree.getRootId();
+
+  // design options
+  extractDesignOptions(viewer, populateDesignOptionDropdown);
 
   const treeContainer = document.querySelector(".tree");
   treeContainer.innerHTML = "";
@@ -639,6 +646,81 @@ function modelBrowserPanel() {
     });
   }
 }
+
+
+function extractDesignOptions(viewer, callback) {
+  console.log('extracting options');
+  const model = viewer.impl.modelQueue().getModels()[0];
+  const instanceTree = model.getData().instanceTree;
+  const rootId = instanceTree.getRootId();
+  const options = new Set();
+
+  instanceTree.enumNodeChildren(rootId, function collect(dbId) {
+    viewer.getProperties(dbId, (props) => {
+      const designOption = props.properties.find(p => p.displayName === "Design Option");
+      console.log('Design Option: ', designOption);
+      if (designOption && designOption.displayValue) {
+        options.add(designOption.displayValue);
+      }
+      instanceTree.enumNodeChildren(dbId, collect);
+    });
+  });
+
+  setTimeout(() => callback([...options]), 1000); // Delay to ensure async getProperties calls complete
+}
+
+
+
+
+function populateDesignOptionDropdown(options) {
+  const dropdown = document.getElementById("designOptionDropdown");
+  dropdown.innerHTML = ""; // clear previous
+
+  options.forEach(option => {
+    const opt = document.createElement("option");
+    opt.value = option;
+    opt.textContent = option;
+    dropdown.appendChild(opt);
+  });
+
+  dropdown.onchange = () => {
+    const selected = dropdown.value;
+    filterByDesignOption(selected);
+  };
+}
+
+
+
+function filterByDesignOption(optionName) {
+  const viewer = window.viewerInstance;
+  const model = viewer.impl.modelQueue().getModels()[0];
+  const instanceTree = model.getData().instanceTree;
+  const rootId = instanceTree.getRootId();
+
+  const toShow = [];
+
+  instanceTree.enumNodeChildren(rootId, function checkNode(dbId) {
+    viewer.getProperties(dbId, (props) => {
+      const designOption = props.properties.find(p => p.displayName === "Design Option");
+      if (designOption && designOption.displayValue === optionName) {
+        toShow.push(dbId);
+      }
+      instanceTree.enumNodeChildren(dbId, checkNode);
+    });
+  });
+
+  setTimeout(() => {
+    viewer.hide()
+    viewer.isolate(toShow);
+    viewer.fitToView(toShow);
+    // viewer.impl.visibilityManager.setNodeOff(toShow,true)  // complete hide from the viewer
+  }, 1000); // Allow async getProperties to finish
+}
+
+
+
+
+
 
 function fileUploadPanel() {
 
