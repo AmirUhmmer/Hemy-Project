@@ -323,6 +323,7 @@ body.preview-active #fileContainer {
 
 .file-table tr:hover {
   background: #f1f5f9;
+  cursor: pointer;
 }
 
 .user-badge {
@@ -521,6 +522,60 @@ body.preview-active #fileContainer {
   margin: 0.5em;
 }
 
+/* ---------------------------------------------- Responsive adjustments ----------------------------------------- */
+@media (max-width: 768px) {
+  .modern-file-container {
+    margin: 20px;
+    height: auto;
+  }
+
+  .file-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .file-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .upload-btn-landing, .export-btn, .view-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-filter {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .file-main {
+    padding: 0 12px;
+  }
+
+  .file-table th, .file-table td {
+    font-size: 14px;
+    padding: 8px 6px;
+  }
+
+  .file-header .title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .file-header .title {
+    font-size: 18px;
+  }
+
+  .file-table th, .file-table td {
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 600px) {
   #viewerSidebar {
     width: 50px;
@@ -546,8 +601,7 @@ body.preview-active #fileContainer {
   }
 }
 
-@media (max-width: 1900px) {
-}
+/* ---------------------------------------------- Responsive adjustments ----------------------------------------- */
 
 .icon-hub:before {
   background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/apps-16.svg); /* or https://raw.githubusercontent.com/primer/octicons/main/icons/stack-16.svg */
