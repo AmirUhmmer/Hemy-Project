@@ -544,7 +544,7 @@ router.post('/api/acc/updateIssueTask', async (req, res) => {
       {
         method: "PATCH",
         headers: {
-          'Authorization': `Basic ${authToken}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload)

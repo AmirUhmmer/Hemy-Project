@@ -113,6 +113,7 @@ document.getElementById("create-task-btn").onclick = async () => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = "b." + params.get("id");
+  const hemyprojectId = params.get("projectid");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -167,7 +168,7 @@ document.getElementById("create-task-btn").onclick = async () => {
     // placement
     document.getElementById("task-placement").value = window.modelName;
 
-    // prepare post issue
+    // prepare post task
     document.getElementById("task-form").onsubmit = async (e) => {
       e.preventDefault();
       const model = viewer.impl.modelQueue().getModels()[0];
@@ -203,7 +204,10 @@ document.getElementById("create-task-btn").onclick = async () => {
       let version = null;
 
       // subtype & wacthers
+      const taskTypesSelect = document.getElementById("task-types");
       const subtypeId = document.getElementById("task-types").value;
+      const selectedTypeText = taskTypesSelect.options[taskTypesSelect.selectedIndex].text; // text from <option>
+
       const watcherSelect = document.getElementById("task-watchers");
       const selectedWatchers = Array.from(watcherSelect.selectedOptions).map(
         (opt) => opt.value
@@ -308,6 +312,35 @@ document.getElementById("create-task-btn").onclick = async () => {
         setTimeout(() => {
           viewer.resize();
         }, 300);
+
+
+
+
+
+        //CREATE RECORD ON HEMY X  ---- TASK
+        const hemyX = await fetch(
+          "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              hemyprojectId: hemyprojectId.toLowerCase(),
+              issueId: data.id,
+              title: title,
+              types: selectedTypeText,
+              issuesTask: document.getElementById("issue-task-field").value,
+              HardAsset: document.getElementById("task-hard-asset").value,
+              FunctionalLocation: document.getElementById("task-functional-location").value,
+              description: document.getElementById("task-description").value,
+              status: document.getElementById("task-status").value,
+              placement: document.getElementById("task-placement").value
+            }),
+          }
+        );
+
+        document.getElementById("task-form").reset();
+
+
       } catch (err) {
         console.error(err);
         alert("Error creating issue. See console for details.");
@@ -384,7 +417,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = "b." + params.get("id");
-  const hemyprojectId = params.get("hemyprojectId");
+  const hemyprojectId = params.get("projectid");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -583,26 +616,29 @@ document.getElementById("create-issue-btn").onclick = async () => {
         document.getElementById("preview").style.width = "97%";
 
         
+        //CREATE RECORD ON HEMY X  ---- ISSUE
+        const hemyX = await fetch(
+          "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              hemyprojectId: hemyprojectId.toLowerCase(),
+              issueId: data.id,
+              title: title,
+              types: selectedTypeText,
+              issuesTask: document.getElementById("issue-task").value,
+              HardAsset: document.getElementById("issue-hard-asset").value,
+              FunctionalLocation: document.getElementById("issue-functional-location").value,
+              description: document.getElementById("issue-description").value,
+              status: document.getElementById("issue-status").value,
+              placement: document.getElementById("issue-placement").value
+            }),
+          }
+        );
 
-        // const hemyX = await fetch(
-        //   "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
-        //   {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({
-        //       hemyprojectId: hemyprojectId,
-        //       issueId: data.id,
-        //       title: title,
-        //       types: selectedTypeText,
-        //       issuesTask: document.getElementById("issue-task").value,
-        //       HardAsset: document.getElementById("issue-hard-asset").value,
-        //       FunctionalLocation: document.getElementById("issue-functional-location").value,
-        //       description: document.getElementById("issue-description").value,
-        //       status: document.getElementById("issue-status").value,
-        //       placement: document.getElementById("issue-placement").value
-        //     }),
-        //   }
-        // );
+
+        document.getElementById("issue-form").reset();
         
 
         setTimeout(() => {
@@ -704,9 +740,12 @@ document.getElementById("edit-form").onsubmit = async (e) => {
       viewer.resize();
     }, 300);
 
+    document.getElementById("edit-form").reset();
+
+
   } catch (err) {
     console.error(err);
-    alert("Error creating issue. See console for details.");
+    // alert("Error creating issue. See console for details.");
   }
 };
 
