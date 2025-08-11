@@ -875,7 +875,7 @@ body.preview-active #fileContainer {
 .search-container {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  /* max-width: 400px; */
 }
 
 .search-container input[type="text"] {
