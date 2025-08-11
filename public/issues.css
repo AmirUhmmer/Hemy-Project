@@ -186,6 +186,29 @@
 }
 
 
+.custom-file-label-issue,
+.custom-file-label-task {
+  display: inline-block;
+  padding: 10px 16px;
+  background-color: #f0f0f0;
+  color: #333;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.custom-file-label-issue:hover,
+.custom-file-label-task:hover {
+  background-color: #e2e2e2;
+}
+
+
+
+
+
 .issue-reporting-content input,
 .issue-reporting-content select,
 .issue-reporting-content textarea,

@@ -10,6 +10,57 @@ document.getElementById("task-filter-btn").addEventListener("click", taskFilterP
 document.getElementById("clear-issue-filter-btn").addEventListener("click", resetIssueFilter);
 // document.getElementById("clear-task-filter-btn").addEventListener("click", resetTaskFilter);
 
+//FILE INPUT UI 
+const fileInput = document.getElementById("issue-upload-input");
+const fileLabel = document.querySelector(".custom-file-label-issue");
+
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const maxSizeMB = 45; // keep under 50MB after Base64 expansion
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    if (file.size > maxSizeBytes) {
+      alert(`❌ File is too large. Please upload a file under ${maxSizeMB} MB.`);
+      fileInput.value = ""; // reset file input
+      fileLabel.textContent = "Choose a file";
+      return;
+    }
+
+    // ✅ File size OK
+    fileLabel.textContent = file.name;
+  } else {
+    fileLabel.textContent = "Choose a file";
+  }
+});
+
+
+
+//FILE INPUT UI TASK
+const fileInputTask = document.getElementById("task-upload-input");
+const fileLabelTask = document.querySelector(".custom-file-label-task");
+
+fileInputTask.addEventListener("change", () => {
+  if (fileInputTask.files.length > 0) {
+    const file = fileInputTask.files[0];
+    const maxSizeMB = 45; // keep under 50 MB to allow for Base64 growth
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    if (file.size > maxSizeBytes) {
+      alert(`❌ File is too large. Please upload a file under ${maxSizeMB} MB.`);
+      fileInputTask.value = ""; // clear the input
+      fileLabelTask.textContent = "Choose a file";
+      return;
+    }
+
+    // ✅ File size is fine
+    fileLabelTask.textContent = file.name;
+  } else {
+    fileLabelTask.textContent = "Choose a file";
+  }
+});
+
+
 document.getElementById("edit-back-btn").addEventListener("click", () => {
   const panel = document.getElementById("edit-details-panel");
   panel.style.visibility = "hidden";
@@ -113,7 +164,7 @@ document.getElementById("create-task-btn").onclick = async () => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = "b." + params.get("id");
-  const hemyprojectId = params.get("projectid");
+  const hemyprojectId = params.get("hemyprojectId");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -315,6 +366,19 @@ document.getElementById("create-task-btn").onclick = async () => {
 
 
 
+        const fileInput = document.getElementById("task-upload-input");
+
+        if (!fileInput.files.length) return alert("Select a file");
+
+        const file = fileInput.files[0];
+
+        let fileBase64 = null;
+        let fileName = null;
+
+        if (file) {
+          fileBase64 = await toBase64(file);
+          fileName = file.name;
+        }
 
 
         //CREATE RECORD ON HEMY X  ---- TASK
@@ -325,7 +389,7 @@ document.getElementById("create-task-btn").onclick = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               hemyprojectId: hemyprojectId.toLowerCase(),
-              issueId: data.id,
+              issueId: data.details.id,
               title: title,
               types: selectedTypeText,
               issuesTask: document.getElementById("issue-task-field").value,
@@ -333,7 +397,9 @@ document.getElementById("create-task-btn").onclick = async () => {
               FunctionalLocation: document.getElementById("task-functional-location").value,
               description: document.getElementById("task-description").value,
               status: document.getElementById("task-status").value,
-              placement: document.getElementById("task-placement").value
+              placement: document.getElementById("task-placement").value,
+              fileName: fileName,
+              fileContent: fileBase64
             }),
           }
         );
@@ -417,7 +483,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = "b." + params.get("id");
-  const hemyprojectId = params.get("projectid");
+  const hemyprojectId = params.get("hemyprojectId");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -615,6 +681,23 @@ document.getElementById("create-issue-btn").onclick = async () => {
 
         document.getElementById("preview").style.width = "97%";
 
+
+
+
+        const fileInput = document.getElementById("issue-upload-input");
+
+        if (!fileInput.files.length) return alert("Select a file");
+
+        const file = fileInput.files[0];
+
+        let fileBase64 = null;
+        let fileName = null;
+
+        if (file) {
+          fileBase64 = await toBase64(file);
+          fileName = file.name;
+        }
+
         
         //CREATE RECORD ON HEMY X  ---- ISSUE
         const hemyX = await fetch(
@@ -624,7 +707,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               hemyprojectId: hemyprojectId.toLowerCase(),
-              issueId: data.id,
+              issueId: data.details.id,
               title: title,
               types: selectedTypeText,
               issuesTask: document.getElementById("issue-task").value,
@@ -632,7 +715,9 @@ document.getElementById("create-issue-btn").onclick = async () => {
               FunctionalLocation: document.getElementById("issue-functional-location").value,
               description: document.getElementById("issue-description").value,
               status: document.getElementById("issue-status").value,
-              placement: document.getElementById("issue-placement").value
+              placement: document.getElementById("issue-placement").value,
+              fileName: fileName,
+              fileContent: fileBase64
             }),
           }
         );
@@ -2090,4 +2175,16 @@ async function editIssueTask(id, title, description, issueSubtypeId, status, ass
   document.getElementById("edit-start-date").value = startDate || "";
   document.getElementById("edit-due-date").value = dueDate || "";
   document.getElementById("edit-placement").value = window.modelName || "";
+}
+
+
+
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(',')[1]); // Remove "data:*/*;base64,"
+    reader.onerror = error => reject(error);
+  });
 }
