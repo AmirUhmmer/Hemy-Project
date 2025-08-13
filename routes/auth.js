@@ -557,7 +557,7 @@ router.post('/api/acc/updateIssueTask', async (req, res) => {
       return res.status(projectRes.status).json(projectData);
     }
 
-    res.status(200).json({ message: 'Issue updated successfully'});
+    res.status(200).json({ message: 'Issue updated successfully', details: projectData});
 
   } catch (err) {
     console.error("Error:", err);

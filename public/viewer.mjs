@@ -62,7 +62,7 @@ export function initViewer(container) {
 // ******************************* WORKING ************************
 // URN:  dXJuOmFkc2sud2lwZW1lYTpmcy5maWxlOnZmLkpiRWpmR1VPUjQtbEZBQ3dRMmcxOXc/dmVyc2lvbj01
 export function loadModel(viewer, urn) {
-    console.log("URN: ", urn);
+    // console.log("URN: ", urn);
     async function onDocumentLoadSuccess(doc) {
         const defaultViewable = doc.getRoot().getDefaultGeometry();
         const loadOptions = {
@@ -85,7 +85,7 @@ export function loadModel(viewer, urn) {
                 functions.sidebarButtons3D(viewer);
                 viewer.model.getSeedUrn();
                 const decodedUrn = atob(urn.replace(/_/g, '/').replace(/-/g, '+'));
-                console.log("Decoded URN:", decodedUrn);
+                // console.log("Decoded URN:", decodedUrn);
                 let params = new URLSearchParams(window.location.search);
                 const projectId = params.get('id');
                 const authToken = localStorage.getItem('authToken');

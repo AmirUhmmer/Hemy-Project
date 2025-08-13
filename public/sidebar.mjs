@@ -269,7 +269,7 @@ export async function renderCustomTree(onSelectionChanged) {
   for (const node of rootNodes) {
     const tr = appendNodeRow(tbody, node, hubId, projectId, onSelectionChanged);
 
-    console.log('rootNodes: ', rootNodes);
+    // console.log('rootNodes: ', rootNodes);
 
     // Auto-expand if it's "Project Files"
     if (node.text.toLowerCase() === 'project files' && node.id.startsWith('folder|')) {

@@ -77,7 +77,7 @@ async function startApp() {
   renderCustomTree((versionId) => {
     // 👇 If you're still using base64 for loading models
     const encodedUrn = window.btoa(versionId).replace(/=/g, '');
-    console.log("URN: ", encodedUrn);
+    // console.log("URN: ", encodedUrn);
     document.getElementById('preview').classList.add('active');
     loadModel(viewer, encodedUrn);
   });

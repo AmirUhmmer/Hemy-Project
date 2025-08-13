@@ -161,10 +161,11 @@ document.getElementById("create-task-btn").onclick = async () => {
   const panel = document.getElementById("task-panel");
   panel.style.visibility = "hidden";
   document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
+  document.getElementById("task-details-panel").style.visibility = "hidden";
   document.getElementById("preview").style.width = "97%";
-  let params = new URLSearchParams(window.location.search);
-  const projectId = "b." + params.get("id");
-  const hemyprojectId = params.get("hemyprojectId");
+  // let params = new URLSearchParams(window.location.search);
+  // const projectId = "b." + params.get("id");
+  // const hemyprojectId = params.get("hemyprojectId");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -174,6 +175,9 @@ document.getElementById("create-task-btn").onclick = async () => {
     "Autodesk.BIM360.Extension.PushPin"
   );
 
+  pushpin_ext.pushPinManager.removeEventListener("pushpin.created", pushpinIssue);
+
+  pushpin_ext.pushPinManager.removeEventListener("pushpin.created");
   await pushpin_ext.pushPinManager.removeAllItems();
 
   pushpin_ext.startCreateItem({
@@ -181,8 +185,17 @@ document.getElementById("create-task-btn").onclick = async () => {
     status: "open",
     type: "issues",
   });
+  pushpin_ext.pushPinManager.addEventListener("pushpin.created", pushpinTask);
+}
 
-  pushpin_ext.pushPinManager.addEventListener("pushpin.created", function (e) {
+async function pushpinTask(e) {
+    let params = new URLSearchParams(window.location.search);
+    const projectId = "b." + params.get("id");
+    const hemyprojectId = params.get("hemyprojectId");
+    const viewer = window.viewerInstance;
+    const pushpin_ext = await viewer.loadExtension(
+      "Autodesk.BIM360.Extension.PushPin"
+    );
     const pushpinId = e.value?.itemData?.id;
     const issue = pushpin_ext.getItemById(pushpinId);
 
@@ -368,7 +381,7 @@ document.getElementById("create-task-btn").onclick = async () => {
 
         const fileInput = document.getElementById("task-upload-input");
 
-        if (!fileInput.files.length) return alert("Select a file");
+        // if (!fileInput.files.length) return alert("Select a file");
 
         const file = fileInput.files[0];
 
@@ -379,6 +392,10 @@ document.getElementById("create-task-btn").onclick = async () => {
           fileBase64 = await toBase64(file);
           fileName = file.name;
         }
+
+
+        const assignedToSelect = document.getElementById("task-assigned-to");
+        const assignedToText = assignedToSelect.options[assignedToSelect.selectedIndex].text;
 
 
         //CREATE RECORD ON HEMY X  ---- TASK
@@ -398,6 +415,9 @@ document.getElementById("create-task-btn").onclick = async () => {
               description: document.getElementById("task-description").value,
               status: document.getElementById("task-status").value,
               placement: document.getElementById("task-placement").value,
+              startDate: document.getElementById("task-start-date").value,
+              dueDate: document.getElementById("task-due-date").value,
+              assignedTo: assignedToText,
               fileName: fileName,
               fileContent: fileBase64
             }),
@@ -412,7 +432,6 @@ document.getElementById("create-task-btn").onclick = async () => {
         alert("Error creating issue. See console for details.");
       }
     };
-  });
 }
 
 
@@ -471,6 +490,8 @@ document.getElementById("task-filter-form").onsubmit = async (e) => {
 
 
 // ------------------------------------------ CREATE ISSUES ------------------------------------------------
+
+// ------------------------------------------ CREATE ISSUES ------------------------------------------------
 document.getElementById("create-issue-btn-issue-task-panel").onclick = async () => {
   document.getElementById("create-issue-btn").click();
 }
@@ -480,10 +501,8 @@ document.getElementById("create-issue-btn").onclick = async () => {
   const panel = document.getElementById("issue-panel");
   panel.style.visibility = "hidden";
   document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
+  document.getElementById("task-details-panel").style.visibility = "hidden";
   document.getElementById("preview").style.width = "97%";
-  let params = new URLSearchParams(window.location.search);
-  const projectId = "b." + params.get("id");
-  const hemyprojectId = params.get("hemyprojectId");
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -492,7 +511,8 @@ document.getElementById("create-issue-btn").onclick = async () => {
   const pushpin_ext = await viewer.loadExtension(
     "Autodesk.BIM360.Extension.PushPin"
   );
-
+  
+  pushpin_ext.pushPinManager.removeEventListener("pushpin.created", pushpinTask);
   await pushpin_ext.pushPinManager.removeAllItems();
 
   pushpin_ext.startCreateItem({
@@ -501,7 +521,18 @@ document.getElementById("create-issue-btn").onclick = async () => {
     type: "issues",
   });
 
-  pushpin_ext.pushPinManager.addEventListener("pushpin.created", function (e) {
+  pushpin_ext.pushPinManager.addEventListener("pushpin.created", pushpinIssue);
+};
+
+
+async function pushpinIssue(e){
+    let params = new URLSearchParams(window.location.search);
+    const projectId = "b." + params.get("id");
+    const hemyprojectId = params.get("hemyprojectId");
+    const viewer = window.viewerInstance;
+    const pushpin_ext = await viewer.loadExtension(
+      "Autodesk.BIM360.Extension.PushPin"
+    );
     const pushpinId = e.value?.itemData?.id;
     const issue = pushpin_ext.getItemById(pushpinId);
 
@@ -686,7 +717,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
 
         const fileInput = document.getElementById("issue-upload-input");
 
-        if (!fileInput.files.length) return alert("Select a file");
+        // if (!fileInput.files.length) return alert("Select a file");
 
         const file = fileInput.files[0];
 
@@ -694,9 +725,14 @@ document.getElementById("create-issue-btn").onclick = async () => {
         let fileName = null;
 
         if (file) {
+          console
           fileBase64 = await toBase64(file);
           fileName = file.name;
         }
+
+
+        const assignedToSelect = document.getElementById("issue-assigned-to");
+        const assignedToText = assignedToSelect.options[assignedToSelect.selectedIndex].text;
 
         
         //CREATE RECORD ON HEMY X  ---- ISSUE
@@ -716,6 +752,9 @@ document.getElementById("create-issue-btn").onclick = async () => {
               description: document.getElementById("issue-description").value,
               status: document.getElementById("issue-status").value,
               placement: document.getElementById("issue-placement").value,
+              startDate: document.getElementById("issue-start-date").value,
+              dueDate: document.getElementById("issue-due-date").value,
+              assignedTo: assignedToText,
               fileName: fileName,
               fileContent: fileBase64
             }),
@@ -734,8 +773,283 @@ document.getElementById("create-issue-btn").onclick = async () => {
         alert("Error creating issue. See console for details.");
       }
     };
-  });
-};
+}
+// document.getElementById("create-issue-btn-issue-task-panel").onclick = async () => {
+//   document.getElementById("create-issue-btn").click();
+// }
+
+// document.getElementById("create-issue-btn").onclick = async () => {
+//   const viewer = window.viewerInstance;
+//   const panel = document.getElementById("issue-panel");
+//   panel.style.visibility = "hidden";
+//   document.getElementById("issues-and-tasks-panel").style.visibility = "hidden";
+//   document.getElementById("task-details-panel").style.visibility = "hidden";
+//   document.getElementById("preview").style.width = "97%";
+//   let params = new URLSearchParams(window.location.search);
+//   const projectId = "b." + params.get("id");
+//   const hemyprojectId = params.get("hemyprojectId");
+
+//   setTimeout(() => {
+//     window.viewerInstance.resize();
+//   }, 300);
+
+//   const pushpin_ext = await viewer.loadExtension(
+//     "Autodesk.BIM360.Extension.PushPin"
+//   );
+  
+//   pushpin_ext.pushPinManager.removeEventListener("pushpin.created");
+//   await pushpin_ext.pushPinManager.removeAllItems();
+
+//   pushpin_ext.startCreateItem({
+//     label: "New Issue",
+//     status: "open",
+//     type: "issues",
+//   });
+
+//   pushpin_ext.pushPinManager.addEventListener("pushpin.created", function (e) {
+//     const pushpinId = e.value?.itemData?.id;
+//     const issue = pushpin_ext.getItemById(pushpinId);
+
+//     if (pushpinId) {
+//       pushpin_ext.endCreateItem();
+//       pushpin_ext.setDraggableById(pushpinId, true);
+//       //   document.getElementsByClassName("pushpin-billboard-marker").style.backgroundColor = "#F54927"; //red
+//     }
+
+//     // Show issue details panel
+//     const issuePanel = document.getElementById("issue-details-panel");
+//     issuePanel.style.visibility = "visible";
+//     document.getElementById("preview").style.width = "72%";
+//     document.getElementById("issue-task").value = "Issue";
+//     viewer.model.getData().name;
+//     // console.log("Model Name:", viewer.getVisibleModels());
+
+//     setTimeout(() => {
+//       window.viewerInstance.resize();
+//     }, 300);
+
+//     // automated fields
+//     // title
+//     viewer.getProperties(issue.objectId, function (props) {
+//       // console.log('Properties ', props.properties)
+//       const categoryProp = props.properties.find(
+//         (p) => p.displayName === "Category"
+//       );
+
+//       if (categoryProp) {
+//         document.getElementById("issue-title").value =
+//           categoryProp.displayValue;
+//       }
+//     });
+
+//     // placement
+//     document.getElementById("issue-placement").value = window.modelName;
+
+//     // prepare post issue
+//     document.getElementById("issue-form").onsubmit = async (e) => {
+//       e.preventDefault();
+//       const model = viewer.impl.modelQueue().getModels()[0];
+//       const versionUrn = model.getData().urn;
+//       const loadedDocument = viewer.model.getDocumentNode();
+
+//       if (!versionUrn) {
+//         console.error("❌ versionUrn is missing from model.getData().urn");
+//         alert("Version ID not found in loaded model.");
+//         return;
+//       }
+
+//       let params = new URLSearchParams(window.location.search);
+//       const projectId = params.get("id");
+//       const authToken = localStorage.getItem("authToken");
+//       const title = document.getElementById("issue-title").value;
+
+//       function fixBase64UrlEncoding(str) {
+//         // Remove 'urn:' prefix if present
+//         str = str.replace(/^urn:/, "");
+
+//         // Replace URL-safe chars back to standard Base64
+//         str = str.replace(/-/g, "+").replace(/_/g, "/");
+
+//         // Add padding if needed
+//         while (str.length % 4 !== 0) {
+//           str += "=";
+//         }
+
+//         return str;
+//       }
+
+//       let version = null;
+
+//       // subtype & wacthers
+//       const issueTypesSelect = document.getElementById("issue-types");
+//       const subtypeId = document.getElementById("issue-types").value;
+//       const selectedTypeText = issueTypesSelect.options[issueTypesSelect.selectedIndex].text; // text from <option>
+//       const watcherSelect = document.getElementById("issue-watchers");
+//       const selectedWatchers = Array.from(watcherSelect.selectedOptions).map(
+//         (opt) => opt.value
+//       );
+//       const assignSelect = document.getElementById("issue-assigned-to");
+//       const assignedTo = assignSelect.value;
+//       const assignedToType =
+//         assignSelect.selectedOptions[0]?.getAttribute("data-type");
+//       const startDateRaw = document.getElementById("issue-start-date").value;
+//       const dueDateRaw = document.getElementById("issue-due-date").value;
+
+//       const startDate = startDateRaw
+//         ? new Date(startDateRaw).toISOString().split("T")[0]
+//         : null;
+//       const dueDate = dueDateRaw
+//         ? new Date(dueDateRaw).toISOString().split("T")[0]
+//         : null;
+
+//       try {
+//         const fixedVersionUrn = fixBase64UrlEncoding(versionUrn);
+//         const decodedVersionUrn = atob(fixedVersionUrn);
+//         console.log("✅ Decoded Version URN:", decodedVersionUrn);
+
+//         const match = decodedVersionUrn.match(/version=(\d+)/);
+//         version = match ? parseInt(match[1], 10) : null;
+//         console.log("📦 Version number:", version);
+//       } catch (e) {
+//         console.warn("⚠️ Failed to decode version URN:", e.message);
+//       }
+
+//       const payload = {
+//         title: title,
+//         status: "open",
+//         description: document.getElementById("issue-description").value,
+//         issueSubtypeId: subtypeId,
+//         assignedTo: assignedTo,
+//         assignedToType: assignedToType,
+//         watchers: selectedWatchers,
+//         startDate: startDate,
+//         dueDate: dueDate,
+//         customAttributes: [
+//           {
+//             attributeDefinitionId: getAttrIdByTitle("Issue/Task"),
+//             value: document.getElementById("issue-task").value,
+//           },
+//           {
+//             attributeDefinitionId: getAttrIdByTitle("Hard Asset Name"),
+//             value: document.getElementById("issue-hard-asset").value,
+//           },
+//           {
+//             attributeDefinitionId: getAttrIdByTitle("Functional Location"),
+//             value: document.getElementById("issue-functional-location").value,
+//           },
+//         ],
+
+//         linkedDocuments: [
+//           {
+//             type: "TwoDVectorPushpin",
+//             urn: window.lineageUrn,
+//             createdAtVersion: Number(version),
+//             details: {
+//               viewable: {
+//                 name: loadedDocument.data.name,
+//                 guid: loadedDocument.data.guid,
+//                 is3D: loadedDocument.data.role === "3d",
+//                 viewableId: loadedDocument.data.viewableID,
+//               },
+//               externalId: issue.externalId,
+//               position: issue.position,
+//               objectId: issue.objectId,
+//               viewerState: issue.viewerState,
+//             },
+//           },
+//         ],
+//       };
+
+//       console.log("📦 Payload to send:", payload);
+//       try {
+//         const issueRes = await fetch("/api/acc/postissue", {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${authToken}`,
+//           },
+//           body: JSON.stringify({ projectId, payload, title }), // ✅ send full payload
+//         });
+
+//         if (!issueRes.ok) {
+//           const responseText = await issueRes.text();
+//           throw new Error(
+//             `❌ Failed to create issue. Status: ${issueRes.status}`
+//           );
+//           showErrorNotification(`Error creating issue: ${responseText}`);
+//         }
+
+//         const data = await issueRes.json();
+//         showNotification("Issue created successfully");
+//         document.getElementById("issue-details-panel").style.visibility =
+//           "hidden";
+
+//         document.getElementById("preview").style.width = "97%";
+
+
+
+
+//         const fileInput = document.getElementById("issue-upload-input");
+
+//         // if (!fileInput.files.length) return alert("Select a file");
+
+//         const file = fileInput.files[0];
+
+//         let fileBase64 = null;
+//         let fileName = null;
+
+//         if (file) {
+//           console
+//           fileBase64 = await toBase64(file);
+//           fileName = file.name;
+//         }
+
+
+//         const assignedToSelect = document.getElementById("issue-assigned-to");
+//         const assignedToText = assignedToSelect.options[assignedToSelect.selectedIndex].text;
+
+        
+//         //CREATE RECORD ON HEMY X  ---- ISSUE
+//         const hemyX = await fetch(
+//           "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+//           {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify({
+//               hemyprojectId: hemyprojectId.toLowerCase(),
+//               issueId: data.details.id,
+//               title: title,
+//               types: selectedTypeText,
+//               issuesTask: document.getElementById("issue-task").value,
+//               HardAsset: document.getElementById("issue-hard-asset").value,
+//               FunctionalLocation: document.getElementById("issue-functional-location").value,
+//               description: document.getElementById("issue-description").value,
+//               status: document.getElementById("issue-status").value,
+//               placement: document.getElementById("issue-placement").value,
+//               startDate: document.getElementById("issue-start-date").value,
+//               dueDate: document.getElementById("issue-due-date").value,
+//               assignedTo: assignedToText,
+//               fileName: fileName,
+//               fileContent: fileBase64
+//             }),
+//           }
+//         );
+
+
+//         document.getElementById("issue-form").reset();
+        
+
+//         setTimeout(() => {
+//           viewer.resize();
+//         }, 300);
+//       } catch (err) {
+//         console.error(err);
+//         alert("Error creating issue. See console for details.");
+//       }
+//     };
+//   });
+//   pushpin_ext.pushPinManager.removeEventListener("pushpin.created");
+// };
 
 
 
@@ -754,6 +1068,7 @@ document.getElementById("edit-form").onsubmit = async (e) => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
+  const hemyprojectId = params.get("hemyprojectId");
 
   setTimeout(() => {
     viewer.resize();
@@ -820,6 +1135,33 @@ document.getElementById("edit-form").onsubmit = async (e) => {
     document.getElementById("issue-details-panel").style.visibility = "hidden";
 
     document.getElementById("preview").style.width = "97%";
+
+    const title = document.getElementById("edit-title").value;
+
+    const taskTypesSelect = document.getElementById("edit-types");
+    const subtypeId = document.getElementById("edit-types").value;
+    const selectedTypeText = taskTypesSelect.options[taskTypesSelect.selectedIndex].text;
+
+        // ee88a99d-56ab-4c41-8348-c6d4a2f80464
+    //UPDATE RECORD ON HEMY X  ---- ISSUE/TASK
+    const hemyX = await fetch(
+      "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8953a76682394496957e83c4b0709abf/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L5JJatnoM42CsskzR05txAH0D9equlZCUr9DFHVyjzY",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hemyprojectId: hemyprojectId.toLowerCase(),
+          issueId: data.details.id,
+          title: title,
+          types: selectedTypeText,
+          HardAsset: document.getElementById("edit-hard-asset").value,
+          FunctionalLocation: document.getElementById("edit-functional-location").value,
+          description: document.getElementById("edit-description").value,
+          status: document.getElementById("edit-status").value,
+          placement: document.getElementById("edit-placement").value
+        }),
+      }
+        );
 
     setTimeout(() => {
       viewer.resize();
@@ -2180,11 +2522,24 @@ async function editIssueTask(id, title, description, issueSubtypeId, status, ass
 
 
 
+// function toBase64(file) {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader();
+//     reader.readAsDataURL(file);
+//     reader.onload = () => resolve(reader.result.split(',')[1]); // Remove "data:*/*;base64,"
+//     reader.onerror = error => reject(error);
+//   });
+// }
+
 function toBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(',')[1]); // Remove "data:*/*;base64,"
-    reader.onerror = error => reject(error);
+    reader.onload = () => {
+      // Remove the data:image/...;base64, part
+      const base64String = reader.result.split(',')[1];
+      resolve(base64String);
+    };
+    reader.onerror = (error) => reject(error);
   });
 }
