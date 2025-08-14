@@ -191,7 +191,7 @@ document.getElementById("create-task-btn").onclick = async () => {
 async function pushpinTask(e) {
     let params = new URLSearchParams(window.location.search);
     const projectId = "b." + params.get("id");
-    const hemyprojectId = params.get("hemyprojectId");
+    const hemyprojectId = params.get("projectid");
     const viewer = window.viewerInstance;
     const pushpin_ext = await viewer.loadExtension(
       "Autodesk.BIM360.Extension.PushPin"
@@ -529,7 +529,7 @@ document.getElementById("create-issue-btn").onclick = async () => {
 async function pushpinIssue(e){
     let params = new URLSearchParams(window.location.search);
     const projectId = "b." + params.get("id");
-    const hemyprojectId = params.get("hemyprojectId");
+    const hemyprojectId = params.get("projectid");
     const viewer = window.viewerInstance;
     const pushpin_ext = await viewer.loadExtension(
       "Autodesk.BIM360.Extension.PushPin"
@@ -1070,7 +1070,7 @@ document.getElementById("edit-form").onsubmit = async (e) => {
   document.getElementById("preview").style.width = "97%";
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
-  const hemyprojectId = params.get("hemyprojectId");
+  const hemyprojectId = params.get("projectid");
 
   setTimeout(() => {
     viewer.resize();
