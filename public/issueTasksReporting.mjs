@@ -397,6 +397,25 @@ async function pushpinTask(e) {
         const assignedToSelect = document.getElementById("task-assigned-to");
         const assignedToText = assignedToSelect.options[assignedToSelect.selectedIndex].text;
 
+        console.log(JSON.stringify({
+              hemyprojectId: hemyprojectId.toLowerCase(),
+              issueId: data.details.id,
+              title: title,
+              types: selectedTypeText,
+              issuesTask: document.getElementById("issue-task-field").value,
+              HardAsset: document.getElementById("task-hard-asset").value,
+              FunctionalLocation: document.getElementById("task-functional-location").value,
+              description: document.getElementById("task-description").value,
+              status: document.getElementById("task-status").value,
+              placement: document.getElementById("task-placement").value,
+              startDate: document.getElementById("task-start-date").value,
+              dueDate: document.getElementById("task-due-date").value,
+              assignedTo: assignedToText,
+              fileName: fileName || "",
+              fileContent: fileBase64 || ""
+            })
+          );
+
 
         //CREATE RECORD ON HEMY X  ---- TASK
         const hemyX = await fetch(
@@ -419,8 +438,8 @@ async function pushpinTask(e) {
               startDate: document.getElementById("task-start-date").value,
               dueDate: document.getElementById("task-due-date").value,
               assignedTo: assignedToText,
-              fileName: fileName,
-              fileContent: fileBase64
+              fileName: fileName || "",
+              fileContent: fileBase64 || ""
             }),
           }
         );
@@ -757,8 +776,8 @@ async function pushpinIssue(e){
               startDate: document.getElementById("issue-start-date").value,
               dueDate: document.getElementById("issue-due-date").value,
               assignedTo: assignedToText,
-              fileName: fileName,
-              fileContent: fileBase64
+              fileName: fileName || "",
+              fileContent: fileBase64 || ""
             }),
           }
         );
