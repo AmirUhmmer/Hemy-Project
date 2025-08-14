@@ -400,7 +400,8 @@ async function pushpinTask(e) {
 
         //CREATE RECORD ON HEMY X  ---- TASK
         const hemyX = await fetch(
-          "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+          // "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+          "https://prod-170.westeurope.logic.azure.com:443/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TRdZa8YTpSYN-HN9xsoiiguhY6PTAXQqkhBevorjglI",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -737,7 +738,8 @@ async function pushpinIssue(e){
         
         //CREATE RECORD ON HEMY X  ---- ISSUE
         const hemyX = await fetch(
-          "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+          // "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
+          "https://prod-170.westeurope.logic.azure.com:443/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TRdZa8YTpSYN-HN9xsoiiguhY6PTAXQqkhBevorjglI",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1145,7 +1147,8 @@ document.getElementById("edit-form").onsubmit = async (e) => {
         // ee88a99d-56ab-4c41-8348-c6d4a2f80464
     //UPDATE RECORD ON HEMY X  ---- ISSUE/TASK
     const hemyX = await fetch(
-      "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8953a76682394496957e83c4b0709abf/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L5JJatnoM42CsskzR05txAH0D9equlZCUr9DFHVyjzY",
+      // "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8953a76682394496957e83c4b0709abf/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=L5JJatnoM42CsskzR05txAH0D9equlZCUr9DFHVyjzY",
+      "https://prod-147.westeurope.logic.azure.com:443/workflows/f756160e688f4c8d978ff1f3f944c1d5/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Dap3Gm9dyT00kddFC3uy6eS2CsVryYSXhIV6rQwG3vc",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
