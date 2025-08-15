@@ -188,7 +188,7 @@ body.preview-active #fileContainer {
 /* Container now without sidebar */
 #file-loading-spinner {
     text-align: center;
-    padding: 10px;
+    /* padding: 10px; */
     font-size: 14px;
     color: #555;
 }
@@ -342,20 +342,26 @@ body.preview-active #fileContainer {
 }
 
 .version-badge {
-  display: inline-block;
-  background: #b1b1b1;
-  color: #004cff;
-  border: #717171;
-  border-radius: 25%;
+  display: inline-flex;              /* keeps content centered easily */
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4a90e2, #357ABD); /* subtle modern gradient */
+  color: #fff;                       /* white text for contrast */
+  border: none;                      /* no outdated borders */
+  border-radius: 50%;                /* perfect circle */
   width: 28px;
   height: 28px;
-  text-align: center;
-  font-weight: 700;
+  font-weight: 600;
   margin-right: 6px;
-  font-size: 14px;
-  vertical-align: middle;
-  line-height: 28px;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* soft shadow for depth */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+/* .version-badge:hover {
+  transform: scale(1.08);          
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+} */
 
 .folder-row {
   font-weight: 600;
@@ -571,8 +577,34 @@ body.preview-active #fileContainer {
     font-size: 18px;
   }
 
-  .file-table th, .file-table td {
+  .file-table th, 
+  .file-table td {
     font-size: 13px;
+  }
+
+  #fileContainer {
+    margin-left: -50px;
+    margin-right: 10px;
+  }
+
+  .file-table th:nth-child(2),
+  .file-table td:nth-child(2), /* Description */
+  .file-table th:nth-child(4),
+  .file-table td:nth-child(4), /* Size */
+  .file-table th:nth-child(5),
+  .file-table td:nth-child(5), /* Last updated */
+  .file-table th:nth-child(6),
+  .file-table td:nth-child(6), /* Updated by */
+  .file-table th:nth-child(n+7),
+  .file-table td:nth-child(n+7) {
+    display: none;
+  }
+
+  /* Optional: shrink text so it fits nicely */
+  .file-table th,
+  .file-table td {
+    font-size: 14px;
+    padding: 6px;
   }
 }
 

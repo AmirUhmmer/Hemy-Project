@@ -549,6 +549,11 @@ function filesPanel() {
     : (preview.style.width = "0%");
   document.getElementById("fileContainer").style.left = "3%";
 
+  // responsive
+  if(window.innerWidth <= 480){
+    document.getElementById("fileContainer").style.marginLeft = "0px";
+  }
+
   setTimeout(() => {
     viewer.resize();
     viewer.fitToView();

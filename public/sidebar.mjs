@@ -289,42 +289,62 @@ function appendNodeRow(tbody, node, hubId, projectId, onSelectionChanged, level 
   tr.dataset.level = level;
 
   tr.innerHTML = `
-    <td style="padding-left:${20 * level}px;">
+    <td data-label="Name" style="padding-left:${20 * level}px;">
       ${isFolder ? '<i class="fa fa-caret-right toggle-icon"></i> <i class="fa fa-folder"></i>' 
-                 : '<i class="fa fa-file"></i>'} ${node.text}
+                 : '<i class="fa fa-file"></i>'} ${node.text} <span class="folder-spinner hidden"><i class="fa fa-spinner fa-spin"></i></span>
     </td>
     <td>${node.description || '--'}</td>
-    <td><span class="version-badge">${'V' + node.version || '--'}</td>
+    <td data-label="Version"><span class="version-badge">${'V' + node.version || '--'}</td>
     <td>${node.size || '--'}</td>
     <td>${node.updatedAt ? new Date(node.updatedAt).toDateString() : '--'}</td>
     <td><span class="user-badge">${node.updatedByInitials || '--'}</span> ${node.updatedBy || '--'}</td>
   `;
 
   if (isFolder) {
-    let expanded = false;
     let childRows = [];
 
     tr.addEventListener('click', async (e) => {
-      if (e.target.closest('.toggle-icon') || e.target.closest('td:nth-child(2)')) {
-        if (!expanded) {
+      if (e.target.closest('input[type="checkbox"]') || e.target.closest('button')) return;
+
+      const expanded = tr.dataset.expanded === "true";
+
+      if (!expanded) {
+        if (tr.dataset.loaded !== "true") {
+          const spinnerEl = tr.querySelector('.folder-spinner');
+          if (spinnerEl) spinnerEl.classList.remove('hidden');
+
           const tokens = node.id.split('|');
           const folderId = tokens[3];
           const childNodes = await getContents(hubId, projectId, folderId);
 
-          childRows = childNodes.map(child => {
+          if (spinnerEl) spinnerEl.classList.add('hidden');
+
+          let insertAfter = tr;
+          childNodes.forEach(child => {
             const childTr = appendNodeRow(tbody, child, hubId, projectId, onSelectionChanged, level + 1);
-            tr.insertAdjacentElement('afterend', childTr);
-            return childTr;
+            insertAfter.insertAdjacentElement('afterend', childTr);
+            insertAfter = childTr;
           });
 
-          tr.querySelector('.toggle-icon').classList.replace('fa-caret-right', 'fa-caret-down');
-          expanded = true;
+          tr.dataset.loaded = "true";
         } else {
-          childRows.forEach(row => row.remove());
-          childRows = [];
-          tr.querySelector('.toggle-icon').classList.replace('fa-caret-down', 'fa-caret-right');
-          expanded = false;
+          let nextRow = tr.nextElementSibling;
+          while (nextRow && parseInt(nextRow.dataset.level) > level) {
+            nextRow.style.display = "";
+            nextRow = nextRow.nextElementSibling;
+          }
         }
+
+        tr.querySelector('.toggle-icon').classList.replace('fa-caret-right', 'fa-caret-down');
+        tr.dataset.expanded = "true";
+      } else {
+        let nextRow = tr.nextElementSibling;
+        while (nextRow && parseInt(nextRow.dataset.level) > level) {
+          nextRow.style.display = "none";
+          nextRow = nextRow.nextElementSibling;
+        }
+        tr.querySelector('.toggle-icon').classList.replace('fa-caret-down', 'fa-caret-right');
+        tr.dataset.expanded = "false";
       }
     });
   } else if (node.id.startsWith('version|')) {
@@ -358,6 +378,9 @@ async function autoExpandFolder(tr, node, hubId, projectId, onSelectionChanged, 
   if (icon) {
     icon.classList.replace('fa-caret-right', 'fa-caret-down');
   }
+
+  // NEW: Mark as expanded so click won't reload
+  tr.dataset.expanded = "true";
 }
 
 
