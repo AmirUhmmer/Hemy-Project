@@ -108,6 +108,13 @@ export function sidebarButtons3D(viewer) {
   document.getElementById("fileContainer").style.visibility = "hidden";
   document.getElementById("viewerSidebar").style.visibility = "visible";
 
+  if(window.innerWidth <= 850){
+    const hamburgerBtn = document.getElementsByClassName("hamburger-btn")[0]; // first match
+    if (hamburgerBtn) {
+      hamburgerBtn.style.display = "block";
+    }
+  }
+
   setTimeout(() => {
     viewer.resize();
     viewer.fitToView();

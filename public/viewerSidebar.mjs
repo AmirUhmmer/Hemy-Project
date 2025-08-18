@@ -1,11 +1,36 @@
 const tabs = document.querySelectorAll(".tab");
 const contents = document.querySelectorAll(".tab-content");
 var viewer = window.viewerInstance;
+// console.log("size: ", window.innerWidth);
 
 document.getElementById("files").addEventListener("click", filesPanel);
 document.getElementById("sheets").addEventListener("click", sheetsPanel);
 document.getElementById("model-browser").addEventListener("click", modelBrowserPanel);
 document.getElementById("upload-files").addEventListener("click", fileUploadPanel);
+
+
+
+// HAMBURGER FOR PHONE
+const toggleBtn = document.getElementById('toggleSidebar');
+const sidebar = document.getElementById('viewerSidebar');
+toggleBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+  if(!sidebar.classList.contains('open')){
+    sidebar.style.visibility = 'hidden';
+    document.getElementById('preview').style.width = '100%';
+    setTimeout(() => {
+      window.viewerInstance.resize();
+    }, 300);
+  } else {
+    sidebar.style.visibility = 'visible';
+    document.getElementById('preview').style.width = '95%';
+    setTimeout(() => {
+      window.viewerInstance.resize();
+    }, 300);
+  }
+});
+
+
 
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -17,9 +42,6 @@ tabs.forEach((tab) => {
     document.querySelector(`.${targetClass}`).classList.add("active-tab");
   });
 });
-
-
-
 
 
 
@@ -386,6 +408,12 @@ function sheetsPanel() {
     ? (document.getElementById("preview").style.width = "97%")
     : (document.getElementById("preview").style.width = "72%");
 
+
+  if(window.innerWidth <= 850){
+    panel.style.left = "50px";
+    panel.style.width = "auto";
+  }
+
   setTimeout(() => {
     window.viewerInstance.resize();
     window.viewerInstance.fitToView();
@@ -550,7 +578,7 @@ function filesPanel() {
   document.getElementById("fileContainer").style.left = "3%";
 
   // responsive
-  if(window.innerWidth <= 480){
+  if(window.innerWidth <= 850){
     document.getElementById("fileContainer").style.marginLeft = "0px";
   }
 
@@ -576,6 +604,12 @@ function modelBrowserPanel() {
   panel.style.visibility = isVisible
     ? (document.getElementById("preview").style.width = "97%")
     : (document.getElementById("preview").style.width = "72%");
+
+
+  if(window.innerWidth <= 850){
+    panel.style.left = "50px";
+    panel.style.width = "auto";
+  }
 
   setTimeout(() => {
     window.viewerInstance.resize();
@@ -740,6 +774,12 @@ function fileUploadPanel() {
   panel.style.visibility = isVisible
     ? (document.getElementById("preview").style.width = "97%")
     : (document.getElementById("preview").style.width = "72%");
+
+
+  if(window.innerWidth <= 850){
+    panel.style.left = "50px";
+    panel.style.width = "auto";
+  }
 
   setTimeout(() => {
     window.viewerInstance.resize();

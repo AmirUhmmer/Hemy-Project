@@ -40,8 +40,18 @@
 
   <!----------------------------- VIEWER SIDEBAR ----------------------------->
   <button id="login" style="visibility: hidden">Login</button>
-  <div id="viewerSidebar">
+  <div id="header">
+    <button id="toggleSidebar" class="hamburger-btn" title="Menu">
+      ☰
+    </button>
+  </div>
+
+  <div id="viewerSidebar" class="open">
     <div id="viewerControls">
+      <button class="control-btn" id="phone-sidebar-btn">
+      </button>
+      <button class="control-btn" id="phone-2-sidebar-btn">
+      </button>
       <button class="control-btn" id="files">
         <img src="images/files.svg" alt="File Browser" />
       </button>
@@ -190,7 +200,9 @@
 
   <!----------------------------- MODEL BROWSER ----------------------------->
   <div class="model-browser" id="model-browser-panel">
-    <h2>Model Browser</h2>
+    <div class="panel-header">
+      <h2>Model Browser</h2>
+    </div>
     <div class="search-bar">
       <div class="search-container">
         <input id="filter" type="text" placeholder="Search" />

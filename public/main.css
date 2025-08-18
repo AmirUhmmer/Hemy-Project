@@ -468,6 +468,31 @@ body.preview-active #fileContainer {
 
 
 /* ================================================================================================================================== */
+/* #header {
+    height: 3em;
+    width: 100%;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+} */
+
+.hamburger-btn {
+  position: fixed;
+  left: 0;
+  padding: 10px 13px;
+  z-index: 1100;
+  background: #fff;
+  border: 0px solid #ccc;
+  font-size: 1.5em;
+  border-radius: 6px;
+  display: none;
+  align-items: center; /* vertical centering */
+  justify-content: center; /* horizontal centering */
+}
 
 #viewerSidebar {
   width: 3%;
@@ -529,7 +554,16 @@ body.preview-active #fileContainer {
 }
 
 /* ---------------------------------------------- Responsive adjustments ----------------------------------------- */
-@media (max-width: 768px) {
+#phone-sidebar-btn,
+#phone-2-sidebar-btn {
+  display: none;
+}
+@media (max-width: 850px) {
+  #phone-sidebar-btn,
+  #phone-2-sidebar-btn {
+    display: block;
+  }
+
   .modern-file-container {
     margin: 20px;
     height: auto;
@@ -570,10 +604,8 @@ body.preview-active #fileContainer {
   .file-header .title {
     font-size: 20px;
   }
-}
 
-@media (max-width: 480px) {
-  .file-header .title {
+    .file-header .title {
     font-size: 18px;
   }
 
@@ -606,7 +638,19 @@ body.preview-active #fileContainer {
     font-size: 14px;
     padding: 6px;
   }
+
+  /* .hamburger-btn {
+    display: block;
+  } */
+
+  #viewerSidebar {
+    transition: right 0.3s ease;
+  }
 }
+
+/* @media (max-width: 700px) {
+
+} */
 
 @media (max-width: 600px) {
   #viewerSidebar {
@@ -680,7 +724,9 @@ body.preview-active #fileContainer {
   scrollbar-color: #555 #2c2c2c; /* Thumb color #555 and track color #2c2c2c */
 }
 
-#sheetsPanel, .file-upload {
+#sheetsPanel, 
+.file-upload, 
+.model-browser {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -792,7 +838,7 @@ body.preview-active #fileContainer {
   flex: 1;
 }
 
-.model-browser {
+/* .model-browser {
   font-family: ArtifaktElement;
   visibility: hidden;
   position: fixed;
@@ -807,8 +853,8 @@ body.preview-active #fileContainer {
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 16px;
-  overflow: hidden; /* Prevent outer scrollbars */
-}
+  overflow: hidden;
+} */
 
 
 .model-browser select,
@@ -820,7 +866,6 @@ body.preview-active #fileContainer {
   font-size: 14px;
   background-color: #f9f9f9;
   transition: border-color 0.3s, box-shadow 0.3s;
-  margin-bottom: 12px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -835,6 +880,7 @@ body.preview-active #fileContainer {
   margin-top: 12px;
   border-top: 1px solid #ccc;
   padding-top: 12px;
+  padding: 8px 16px;
 }
 
 .model-browser h2 {
