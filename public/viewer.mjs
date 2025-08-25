@@ -81,6 +81,10 @@ export function loadModel(viewer, urn) {
         if (loaded) {
             if (role === '2d') {
                 functions.toolbarButtons2D(viewer);
+                viewer.model.getSeedUrn();
+                const decodedUrn = atob(urn.replace(/_/g, '/').replace(/-/g, '+'));
+                console.log("Decoded URN:", decodedUrn);
+                window.modelUrn = decodedUrn;
             } else {
                 functions.sidebarButtons3D(viewer);
                 viewer.model.getSeedUrn();
