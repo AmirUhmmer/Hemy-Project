@@ -489,9 +489,11 @@ function sheetsPanel() {
       `;
 
       item.addEventListener("click", () => {
+        // console.log("Loading 2D viewable:", window.modelUrn);
+        // console.log("With GUID:", item.dataset.guid);
         const guid = item.dataset.guid;
         Autodesk.Viewing.Document.load(
-          "urn:" + window.modelUrn,
+          "urn:" + btoa(window.modelUrn),
           (doc) => loadViewable(doc, guid),
           onDocumentLoadFailure
         );
@@ -517,7 +519,7 @@ function sheetsPanel() {
       item.addEventListener("click", () => {
         const guid = item.dataset.guid;
         Autodesk.Viewing.Document.load(
-          "urn:" + window.modelUrn,
+          "urn:" + btoa(window.modelUrn),
           (doc) => loadViewable(doc, guid),
           onDocumentLoadFailure
         );
