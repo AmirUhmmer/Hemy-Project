@@ -96,6 +96,57 @@ service.authRefreshMiddleware = async (req, res, next) => {
     next();
 };
 
+// service.authRefreshMiddleware = async (req, res, next) => {
+//     const refresh_token = req.headers['x-refresh-token'];
+//     const expires_at = parseInt(req.headers['x-expires-at'], 10);
+//     const internal_token = req.headers['x-internal-token'];
+
+//     if (!refresh_token) {
+//         return res.status(401).json({ error: "No refresh token provided" });
+//     }
+
+//     // If expired, get new tokens
+//     if (expires_at < Date.now()) {
+//         try {
+//             const internalCredentials = await authenticationClient.refreshToken(refresh_token, APS_CLIENT_ID, {
+//                 clientSecret: APS_CLIENT_SECRET,
+//                 scopes: [Scopes.DataRead, Scopes.DataCreate]
+//             });
+
+//             const publicCredentials = await authenticationClient.refreshToken(internalCredentials.refresh_token, APS_CLIENT_ID, {
+//                 clientSecret: APS_CLIENT_SECRET,
+//                 scopes: [Scopes.ViewablesRead]
+//             });
+
+//             req.session.public_token = publicCredentials.access_token;
+//             req.session.internal_token = internalCredentials.access_token;
+//             req.session.refresh_token = publicCredentials.refresh_token;
+//             req.session.expires_at = Date.now() + internalCredentials.expires_in * 1000;
+
+//         } catch (err) {
+//             console.error("❌ Refresh failed:", err);
+//             return res.status(401).json({ error: "Refresh failed" });
+//         }
+//     } else {
+//         // still valid, reuse existing values
+//         req.session.public_token = req.session.public_token || internal_token;
+//         req.session.internal_token = req.session.internal_token || internal_token;
+//         req.session.refresh_token = refresh_token;
+//         req.session.expires_at = expires_at;
+//     }
+
+//     req.internalOAuthToken = {
+//         access_token: req.session.internal_token,
+//         expires_in: Math.round((req.session.expires_at - Date.now()) / 1000),
+//     };
+//     req.publicOAuthToken = {
+//         access_token: req.session.public_token,
+//         expires_in: Math.round((req.session.expires_at - Date.now()) / 1000),
+//     };
+
+//     next();
+// };
+
 service.getUserProfile = async (accessToken) => {
     const resp = await authenticationClient.getUserInfo(accessToken);
     return resp;

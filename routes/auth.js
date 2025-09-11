@@ -3,7 +3,7 @@ const Axios = require('axios');
 const cors = require('cors'); // Import CORS
 const multer = require('multer');
 // const bodyParser = require('body-parser');
-const { getAuthorizationUrl, authCallbackMiddleware, authRefreshMiddleware, getUserProfile } = require('../services/aps.js');
+const { getAuthorizationUrl, authCallbackMiddleware, authRefreshMiddleware, getUserProfile, refreshTokens } = require('../services/aps.js');
 const { APS_CLIENT_ID, APS_CLIENT_SECRET } = require('../config.js');
 
 const upload = multer({ storage: multer.memoryStorage() }); // keeps file in memory
@@ -50,61 +50,6 @@ router.get('/api/auth/callback', authCallbackMiddleware, (req, res) => {
     `);
 });
 
-// router.get('/api/auth/token', async (req, res) => {
-//     try {
-//         const response = await Axios({
-//             method: 'POST',
-//             url: 'https://developer.api.autodesk.com/authentication/v2/token',
-//             headers: {
-//                 'content-type': 'application/x-www-form-urlencoded',
-//                 // 'Accept': 'application/json',
-//                 // 'Authorization': `Basic SERuVXlvcDFCcjZoS2dGa1BGTWZka3JOY1k4MTFpTTc1OUJFQ2hwWWtmZVVaM3JyOkJoRzdNaG1FMjdka1RuY3ZiRjFGOFlMd09wRllxT3I0aTN2ak9zUWpwVVplUGkzdnBhMW1VcTNHNlgwdjdLUHA=`,
-//                 'x-user-id': '3a15881a-370e-4d72-80f7-8701c4b1806c'
-//             },
-//             data: querystring.stringify({
-//                 client_id: APS_CLIENT_ID,
-//                 client_secret: APS_CLIENT_SECRET,
-//                 grant_type: 'client_credentials',
-//                 scope: 'data:read data:write account:read viewables:read',
-//             })
-//         });
-
-//         if (response.status === 200 && response.data.access_token) {
-//             res.json({
-//                 access_token: response.data.access_token,
-//                 refresh_token: response.data.access_token,
-//                 expires_in: response.data.expires_in,
-//                 internal_token: response.data.access_token
-//             });
-//         } else {
-//             console.error('Authentication failed, invalid response:', response.data);
-//             res.status(400).json({ error: 'Failed to authenticate: Invalid response from API' });
-//         }
-
-//     } catch (error) {
-//         // Log detailed error for debugging
-//         console.error('Error during authentication:', error.response?.data || error.message);
-//         res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
-//     }
-// });
-
-// router.get('/api/auth/profile', async function (req, res, next) {
-//     try {
-//         const authToken = req.headers.authorization?.split(' ')[1]; // Extract token from headers
-//         // const profile = await getUserProfile(authToken);
-//         // res.json({ name: `${profile.name}` });
-//         res.json({ name: authToken });
-//     } catch (err) {
-//         next('ERROR: ' + err);
-//     }
-//     // try {
-//     //     const profile = await getUserProfile(req.internalOAuthToken.access_token);
-//     //     res.json({ name: `${profile.name}` });
-//     // } catch (err) {
-//     //     next(err);
-//     // }
-// });
-
 
 router.get('/api/auth/token', authRefreshMiddleware, function (req, res) {
     res.json(req.publicOAuthToken);
@@ -118,6 +63,49 @@ router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res,
         next(err);
     }
 });
+
+
+
+// ue1c2.kh8idRSRlIeiLVDMIxeOVu8efC7NvdRwWCgwODzJnF
+router.post("/api/auth/refresh", async (req, res) => {
+  try {
+    const refreshToken = req.headers["x-refresh-token"];
+    console.log("Refresh token received:", refreshToken);
+    if (!refreshToken) {
+      return res.status(400).json({ error: "Missing refresh token" });
+    }
+
+    const params = new URLSearchParams();
+    params.append("grant_type", "refresh_token");
+    params.append("refresh_token", refreshToken);
+    params.append("client_id", process.env.APS_CLIENT_ID);
+    params.append("client_secret", process.env.APS_CLIENT_SECRET);
+
+    const response = await fetch("https://developer.api.autodesk.com/authentication/v2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+        // ⚠️ NO "Authorization: Basic ..." needed if sending client_id + client_secret in body
+      },
+      body: params
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("❌ APS Refresh error:", data);
+      return res.status(response.status).json(data);
+    }
+
+    console.log("✅ New tokens:", data);
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Refresh route error:", err);
+    res.status(500).json({ error: "Refresh failed" });
+  }
+});
+
 
 
 
@@ -567,7 +555,7 @@ router.post('/api/acc/updateIssueTask', async (req, res) => {
 
 
 
-// post or create issue
+// post or create issue or task
 router.post('/api/acc/postissue', async (req, res) => {
   const { projectId, payload, title } = req.body;
   const authHeader = req.headers.authorization;
@@ -628,7 +616,7 @@ router.post('/api/acc/postissue', async (req, res) => {
 });
 
 
-// get issues
+// get tasks
 router.post('/api/acc/getTasks', async (req, res) => {
   const { projectId, lineageUrn, issueTaskId } = req.body;
   const authHeader = req.headers.authorization;
