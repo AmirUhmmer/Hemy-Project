@@ -53,6 +53,51 @@ service.authCallbackMiddleware = async (req, res, next) => {
     next();
 };
 
+service.refreshTokenMiddleware = async (req, res, next) => {
+  try {
+    const refresh_token = req.session.refresh_token || req.headers['x-refresh-token'];
+    const expires_at = req.session.expires_at || req.headers['x-expires-at'];
+    const internal_token = req.session.internal_token || req.headers['x-internal-token'];
+
+    if (!refresh_token) {
+      return res.status(401).json({ error: "Missing refresh token" });
+    }
+
+    // If expired, refresh using APS SDK
+    if (!expires_at || expires_at < Date.now()) {
+      const internalCredentials = await authenticationClient.refreshToken(refresh_token, APS_CLIENT_ID, {
+        clientSecret: APS_CLIENT_SECRET,
+        scopes: [Scopes.DataRead, Scopes.DataCreate]
+      });
+
+      const publicCredentials = await authenticationClient.refreshToken(internalCredentials.refresh_token, APS_CLIENT_ID, {
+        clientSecret: APS_CLIENT_SECRET,
+        scopes: [Scopes.ViewablesRead]
+      });
+
+      req.session.public_token = publicCredentials.access_token;
+      req.session.internal_token = internalCredentials.access_token;
+      req.session.refresh_token = publicCredentials.refresh_token;
+      req.session.expires_at = Date.now() + internalCredentials.expires_in * 1000;
+    }
+
+    // Attach valid tokens to request
+    req.internalOAuthToken = {
+      access_token: req.session.internal_token,
+      expires_in: Math.round((req.session.expires_at - Date.now()) / 1000),
+    };
+    req.publicOAuthToken = {
+      access_token: req.session.public_token,
+      expires_in: Math.round((req.session.expires_at - Date.now()) / 1000),
+    };
+
+    next();
+  } catch (err) {
+    console.error("❌ Token refresh error:", err);
+    res.status(500).json({ error: "Token refresh failed" });
+  }
+};
+
 service.authRefreshMiddleware = async (req, res, next) => {
     // const { refresh_token, expires_at } = req.session;
 
@@ -158,6 +203,7 @@ service.getHubs = async (accessToken) => {
 };
 
 service.getProjects = async (hubId, accessToken) => {
+    
     const resp = await dataManagementClient.getHubProjects(accessToken, hubId);
     return resp.data;
 };

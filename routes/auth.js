@@ -3,7 +3,7 @@ const Axios = require('axios');
 const cors = require('cors'); // Import CORS
 const multer = require('multer');
 // const bodyParser = require('body-parser');
-const { getAuthorizationUrl, authCallbackMiddleware, authRefreshMiddleware, getUserProfile, refreshTokens } = require('../services/aps.js');
+const { getAuthorizationUrl, authCallbackMiddleware, authRefreshMiddleware, getUserProfile, refreshTokenMiddleware } = require('../services/aps.js');
 const { APS_CLIENT_ID, APS_CLIENT_SECRET } = require('../config.js');
 
 const upload = multer({ storage: multer.memoryStorage() }); // keeps file in memory
@@ -66,49 +66,68 @@ router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res,
 
 
 
+// #region: refresh token
 // ue1c2.kh8idRSRlIeiLVDMIxeOVu8efC7NvdRwWCgwODzJnF
-router.post("/api/auth/refresh", async (req, res) => {
+// router.post("/api/auth/refresh", async (req, res) => {
+//   try {
+//     const refreshToken = req.headers["x-refresh-token"];
+//     console.log("Refresh token received:", refreshToken);
+//     if (!refreshToken) {
+//       return res.status(400).json({ error: "Missing refresh token" });
+//     }
+
+//     const params = new URLSearchParams();
+//     params.append("grant_type", "refresh_token");
+//     params.append("refresh_token", refreshToken);
+//     params.append("client_id", process.env.APS_CLIENT_ID);
+//     params.append("client_secret", process.env.APS_CLIENT_SECRET);
+
+//     const response = await fetch("https://developer.api.autodesk.com/authentication/v2/token", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/x-www-form-urlencoded",
+//         "Accept": "application/json"
+//         // ⚠️ NO "Authorization: Basic ..." needed if sending client_id + client_secret in body
+//       },
+//       body: params
+//     });
+
+//     const data = await response.json();
+
+//     if (!response.ok) {
+//       console.error("❌ APS Refresh error:", data);
+//       return res.status(response.status).json(data);
+//     }
+
+//     // Convert expires_in → expires_at
+//     const expires_at = Date.now() + data.expires_in * 1000;
+//     const tokenPayload = { ...data, expires_at };
+
+//     console.log("✅ New tokens:", tokenPayload);
+//     res.json(tokenPayload);
+//   } catch (err) {
+//     console.error("❌ Refresh route error:", err);
+//     res.status(500).json({ error: "Refresh failed" });
+//   }
+// });
+// router.js
+router.get('/api/auth/refresh', refreshTokenMiddleware, async function (req, res, next) {
   try {
-    const refreshToken = req.headers["x-refresh-token"];
-    console.log("Refresh token received:", refreshToken);
-    if (!refreshToken) {
-      return res.status(400).json({ error: "Missing refresh token" });
-    }
-
-    const params = new URLSearchParams();
-    params.append("grant_type", "refresh_token");
-    params.append("refresh_token", refreshToken);
-    params.append("client_id", process.env.APS_CLIENT_ID);
-    params.append("client_secret", process.env.APS_CLIENT_SECRET);
-
-    const response = await fetch("https://developer.api.autodesk.com/authentication/v2/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json"
-        // ⚠️ NO "Authorization: Basic ..." needed if sending client_id + client_secret in body
-      },
-      body: params
+    res.json({
+      access_token: req.publicOAuthToken.access_token,   // 👈 now saveTokens will find it
+      refresh_token: req.session.refresh_token,
+      expires_at: req.session.expires_at
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("❌ APS Refresh error:", data);
-      return res.status(response.status).json(data);
-    }
-
-    console.log("✅ New tokens:", data);
-    res.json(data);
   } catch (err) {
-    console.error("❌ Refresh route error:", err);
-    res.status(500).json({ error: "Refresh failed" });
+    next(err);
   }
 });
 
 
 
 
+
+// #region: markups
 // --------------------------------------------------------------------------- MARKUPS ---------------------------------------------------------------------------
 router.get('/markup/save/:markupData', async (req, res) => {
     const markupData = req.params.markupData;
