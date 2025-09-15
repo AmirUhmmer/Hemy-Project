@@ -94,34 +94,45 @@ const login = document.getElementById('login');
 // }
 
 function saveTokens(data) {
-  const access = data.access_token || data.public?.access_token;
-  const refresh = data.refresh_token;
-  const expiresAt = data.expires_at ? parseInt(data.expires_at, 10) : Date.now() + (data.expires_in * 1000);
+  // match backend field names
+  const access = data.token || data.access_token;       // prefer "access_token" if present, fallback to "token"
+  const refresh = data.refreshToken || data.refresh_token;
+  const internal = data.internal_token;
+  
+  // handle expiresAt
+  let expiresAt = data.expires_at ? Number(data.expires_at) : undefined;
+  if (!expiresAt && data.expires_in) {
+    expiresAt = Date.now() + (data.expires_in * 1000);
+  }
 
   if (!access || !refresh) {
     console.error("❌ saveTokens: Missing access/refresh token", data);
     return;
   }
 
-  localStorage.setItem("access_token", access);
-  localStorage.setItem("refresh_token", refresh);
+  localStorage.setItem("authToken", access);
+  localStorage.setItem("refreshToken", refresh);
   localStorage.setItem("expires_at", expiresAt.toString());
+  localStorage.setItem("internal_token", internal);
 
-//   console.log("💾 Tokens saved:", {
-//     access_token: access.slice(0, 20) + "...",
-//     refresh_token: refresh.slice(0, 20) + "...",
-//     expires_at: new Date(expiresAt).toISOString()
-//   });
+  console.log("💾 Tokens saved:", {
+    access_token: access.slice(0, 20) + "...",
+    refresh_token: refresh.slice(0, 20) + "...",
+    expires_at: new Date(expiresAt).toISOString(),
+    internal_token: internal.slice(0, 20) + "..."
+  });
 }
+
 
 
 
 
 export function loadTokens() {
     return {
-        access_token: localStorage.getItem("access_token"),
-        refresh_token: localStorage.getItem("refresh_token"),
-        expires_at: parseInt(localStorage.getItem("expires_at"), 10)
+        access_token: localStorage.getItem("authToken"),
+        refresh_token: localStorage.getItem("refreshToken"),
+        expires_at: parseInt(localStorage.getItem("expires_at"), 10),
+        internal_token: localStorage.getItem("internal_token")
     };
 }
 
@@ -140,10 +151,10 @@ async function initApp() {
 
     // ⏳ Token expired → refresh
     if (access_token && refresh_token && expires_at && Date.now() >= expires_at - 60_000) {
-        console.log("⏳ Token expired, refreshing...");
+        console.log("⏳ Token expired, refreshing...", refresh_token);
         try {
             const resp = await fetch("/api/auth/refresh", {
-                method: "GET",
+                method: "POST",
                 credentials: "include",
                 headers: { "x-refresh-token": refresh_token }
             });

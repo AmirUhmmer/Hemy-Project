@@ -75,10 +75,12 @@ async function getContents(hubId, projectId, folderId = null) {
     let result = [];
 
     if (!folderId) {
+      // console.log('Contents: ', contents);
         const projectFilesFolder = contents.find(item =>
             item.type === 'folders' && item.attributes.displayName === 'Project Files'
         );
         if (projectFilesFolder) {
+            // console.log('Project Files folder ID:', projectFilesFolder.id);
             window.projectFilesFolderId = projectFilesFolder.id;
             result = [createTreeNode({
                 id: `folder|${hubId}|${projectId}|${projectFilesFolder.id}`,

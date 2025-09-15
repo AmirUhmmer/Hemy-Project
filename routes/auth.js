@@ -67,7 +67,60 @@ router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res,
 
 
 // #region: refresh token
-// ue1c2.kh8idRSRlIeiLVDMIxeOVu8efC7NvdRwWCgwODzJnF
+router.post("/api/auth/refresh", async (req, res) => {
+  try {
+    const refreshToken = req.headers["x-refresh-token"];
+    if (!refreshToken) return res.status(400).json({ error: "Missing refresh token" });
+
+    // refresh the 3-legged user token
+    const params = new URLSearchParams();
+    params.append("grant_type", "refresh_token");
+    params.append("refresh_token", refreshToken);
+    params.append("client_id", process.env.APS_CLIENT_ID);
+    params.append("client_secret", process.env.APS_CLIENT_SECRET);
+
+    const response = await fetch("https://developer.api.autodesk.com/authentication/v2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+
+    const expires_at = Date.now() + data.expires_in * 1000;
+
+    // 🔑 ALSO fetch a 2-legged internal token
+    const internalParams = new URLSearchParams();
+    internalParams.append("grant_type", "client_credentials");
+    internalParams.append("client_id", process.env.APS_CLIENT_ID);
+    internalParams.append("client_secret", process.env.APS_CLIENT_SECRET);
+    internalParams.append("scope", "data:read data:write bucket:read bucket:create viewables:read");
+
+    const internalResp = await fetch("https://developer.api.autodesk.com/authentication/v2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: internalParams
+    });
+
+    const internalData = await internalResp.json();
+
+    // final payload with both tokens
+    const tokenPayload = { 
+      ...data, 
+      expires_at, 
+      internal_token: internalData.access_token,
+      internal_expires_in: internalData.expires_in
+    };
+
+    console.log("✅ New tokens (3-legged + internal):", tokenPayload);
+    res.json(tokenPayload);
+  } catch (err) {
+    console.error("❌ Refresh route error:", err);
+    res.status(500).json({ error: "Refresh failed" });
+  }
+});
+
 // router.post("/api/auth/refresh", async (req, res) => {
 //   try {
 //     const refreshToken = req.headers["x-refresh-token"];
@@ -81,7 +134,8 @@ router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res,
 //     params.append("refresh_token", refreshToken);
 //     params.append("client_id", process.env.APS_CLIENT_ID);
 //     params.append("client_secret", process.env.APS_CLIENT_SECRET);
-
+    
+//     console.log("Requesting new tokens with params:", params.toString());
 //     const response = await fetch("https://developer.api.autodesk.com/authentication/v2/token", {
 //       method: "POST",
 //       headers: {
@@ -111,18 +165,18 @@ router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res,
 //   }
 // });
 // router.js
-router.get('/api/auth/refresh', refreshTokenMiddleware, async function (req, res, next) {
-  try {
-    res.json({
-      access_token: req.publicOAuthToken.access_token,   // 👈 now saveTokens will find it
-      refresh_token: req.session.refresh_token,
-      expires_at: req.session.expires_at
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
+// router.get('/api/auth/refresh', refreshTokenMiddleware, async function (req, res, next) {
+//   try {
+//     res.json({
+//       access_token: req.publicOAuthToken.access_token,   // 👈 now saveTokens will find it
+//       refresh_token: req.session.refresh_token,
+//       expires_at: req.session.expires_at
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// });
+// #endregion
 
 
 
@@ -143,7 +197,7 @@ router.post('/api/data', (req, res) => {
     // Respond back to Power Apps
     res.status(200).send('Data received successfully');
 });
-
+// #endregion
 
 
 
