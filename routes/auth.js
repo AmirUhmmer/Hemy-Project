@@ -66,6 +66,7 @@ router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res,
 
 
 
+// * refresh token
 // #region: refresh token
 router.post("/api/auth/refresh", async (req, res) => {
   try {
@@ -180,7 +181,7 @@ router.post("/api/auth/refresh", async (req, res) => {
 
 
 
-
+// ! markups
 // #region: markups
 // --------------------------------------------------------------------------- MARKUPS ---------------------------------------------------------------------------
 router.get('/markup/save/:markupData', async (req, res) => {
@@ -205,8 +206,8 @@ router.post('/api/data', (req, res) => {
 
 
 
-
-
+// * ACC UPLOAD PROCESS
+//  #region : ACC UPLOAD PROCESS
 // POST /api/acc/upload/folderUrn
 router.post('/api/acc/upload/folderUrn', async (req, res) => {
   const { projectId } = req.body; // e.g. 'image.jpg', folder URN, project ID
@@ -549,14 +550,14 @@ router.post('/api/acc/upload/finalize', async (req, res) => {
   }
 });
 
+// #endregion
 
 
 
 
 
-
-
-
+// ! ISSUE REPORTING
+// #region: ISSUE REPORTING
 // -------------------------------- ISSUE REPORTING --------------------------------
 
 
@@ -583,12 +584,12 @@ router.get('/api/acc/getIssueType', async (req, res) => {
   console.log("Get issue types data:", data);
   res.json(data);
 });
+// #endregion
 
 
 
-
-
-// update issue or task
+// * UPDATE ISSUE/TASK
+//  #region: UPDATE ISSUE/TASK
 router.post('/api/acc/updateIssueTask', async (req, res) => {
   const { projectId, payload, issueId } = req.body;
   const authHeader = req.headers.authorization;
@@ -625,9 +626,11 @@ router.post('/api/acc/updateIssueTask', async (req, res) => {
     res.status(500).json({ error: "Unexpected error", details: err.message });
   }
 });
+// #endregion
 
 
-
+// ! CREATE ISSUE OR TASK
+// #region: CREATE ISSUE OR TASK
 // post or create issue or task
 router.post('/api/acc/postissue', async (req, res) => {
   const { projectId, payload, title } = req.body;
@@ -687,8 +690,11 @@ router.post('/api/acc/postissue', async (req, res) => {
     res.status(500).json({ error: "Unexpected error", details: err.message });
   }
 });
+// #endregion
 
 
+// * GET TASKS
+// #region: GET TASKS
 // get tasks
 router.post('/api/acc/getTasks', async (req, res) => {
   const { projectId, lineageUrn, issueTaskId } = req.body;
@@ -798,6 +804,7 @@ router.post('/api/acc/gettasksFiltered', async (req, res) => {
     res.status(500).json({ error: "Unexpected error", details: err.message });
   }
 });
+// #endregion
 
 
 

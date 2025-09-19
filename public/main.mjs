@@ -115,12 +115,12 @@ function saveTokens(data) {
   localStorage.setItem("expires_at", expiresAt.toString());
   localStorage.setItem("internal_token", internal);
 
-  console.log("💾 Tokens saved:", {
-    access_token: access.slice(0, 20) + "...",
-    refresh_token: refresh.slice(0, 20) + "...",
-    expires_at: new Date(expiresAt).toISOString(),
-    internal_token: internal.slice(0, 20) + "..."
-  });
+//   console.log("💾 Tokens saved:", {
+//     access_token: access.slice(0, 20) + "...",
+//     refresh_token: refresh.slice(0, 20) + "...",
+//     expires_at: new Date(expiresAt).toISOString(),
+//     internal_token: internal.slice(0, 20) + "..."
+//   });
 }
 
 
@@ -151,7 +151,7 @@ async function initApp() {
 
     // ⏳ Token expired → refresh
     if (access_token && refresh_token && expires_at && Date.now() >= expires_at - 60_000) {
-        console.log("⏳ Token expired, refreshing...", refresh_token);
+        // console.log("⏳ Token expired, refreshing...", refresh_token);
         try {
             const resp = await fetch("/api/auth/refresh", {
                 method: "POST",
@@ -189,7 +189,7 @@ async function initApp() {
 
             window.addEventListener("message", async (event) => {
                 if (event.origin !== window.location.origin) return;
-                console.log("🔑 Received login token:", event.data);
+                // console.log("🔑 Received login token:", event.data);
                 saveTokens(event.data); // same helper
                 await startApp();
             });

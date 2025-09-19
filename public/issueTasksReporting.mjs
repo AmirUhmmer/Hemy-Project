@@ -151,6 +151,8 @@ document.getElementById("cancel-issue-filter-btn").onclick = () => {
 };
 
 
+// ! create task
+// #region create task
 // ------------------------------------------ CREATE TASK ------------------------------------------------
 document.getElementById("create-task-btn-issue-task-panel").onclick = async () => {
   document.getElementById("create-task-btn").click();
@@ -453,9 +455,11 @@ async function pushpinTask(e) {
       }
     };
 }
+// #endregion
 
 
-
+// * task filter
+// #region task filter
 // ------------------------------------------ TASK FILTER SUBMIT ------------------------------------------------
 document.getElementById("task-filter-form").onsubmit = async (e) => {
   e.preventDefault();
@@ -503,14 +507,11 @@ document.getElementById("task-filter-form").onsubmit = async (e) => {
     alert("Error retrieving issues. See console for details.");
   }
 };
+// #endregion
 
 
-
-
-
-
-// ------------------------------------------ CREATE ISSUES ------------------------------------------------
-
+// ! create issue
+// #region create issue
 // ------------------------------------------ CREATE ISSUES ------------------------------------------------
 document.getElementById("create-issue-btn-issue-task-panel").onclick = async () => {
   document.getElementById("create-issue-btn").click();
@@ -795,6 +796,9 @@ async function pushpinIssue(e){
       }
     };
 }
+// #endregion
+
+
 // document.getElementById("create-issue-btn-issue-task-panel").onclick = async () => {
 //   document.getElementById("create-issue-btn").click();
 // }
@@ -1076,8 +1080,8 @@ async function pushpinIssue(e){
 
 
 
-
-
+// ! update issue/task
+// #region update issue/task
 // ------------------------------------------ UPDATE ISSUE/TASK ------------------------------------------------
 document.getElementById("edit-form").onsubmit = async (e) => {
   e.preventDefault();
@@ -1197,10 +1201,11 @@ document.getElementById("edit-form").onsubmit = async (e) => {
     // alert("Error creating issue. See console for details.");
   }
 };
+// #endregion
 
 
-
-
+// * issue filter submit
+// #region issue filter submit
 // ------------------------------------------ ISSUE FILTER SUBMIT ------------------------------------------------
 document.getElementById("issue-filter-form").onsubmit = async (e) => {
   e.preventDefault();
@@ -1248,10 +1253,11 @@ document.getElementById("issue-filter-form").onsubmit = async (e) => {
     alert("Error retrieving issues. See console for details.");
   }
 };
+// #endregion
 
 
-
-
+// ! issue filter reset
+// #region issue filter reset
 // ------------------------------------------ RESET ISSUE FILTER ------------------------------------------------
 async function resetIssueFilter() {
   document.getElementById("issue-filter-form").reset();
@@ -1291,22 +1297,12 @@ async function resetIssueFilter() {
       alert("Error retrieving issues. See console for details.");
     }
 }
+// #endregion
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+// * issue task panel
+// #region issue task panel
 // ------------------------------------------ ISSUE TASK PANEL ------------------------------------------------
-
 async function createIssueTaskPanel(){
   const viewer = window.viewerInstance;
 
@@ -1421,9 +1417,11 @@ async function createIssueTaskPanel(){
 
   
 }
+// #endregion
 
 
-
+// ! task list
+// #region task list
 //-------------------------------- TASK LIST --------------------------------
 async function createTaskPanel() {
   const viewer = window.viewerInstance;
@@ -1496,8 +1494,11 @@ async function createTaskPanel() {
     alert("Error retrieving issues. See console for details.");
   }
 }
+// #endregion
 
 
+// * task filter panel
+// #region task filter panel
 // ------------------------------------------ TASK FILTER PANEL ------------------------------------------------
 async function taskFilterPanel() {
   const viewer = window.viewerInstance;
@@ -1517,10 +1518,11 @@ async function taskFilterPanel() {
     window.viewerInstance.resize();
   }, 300);
 }
+// #endregion
 
 
-
-
+// ! issue list
+// #region issue list
 //-------------------------------- ISSUES LIST --------------------------------
 async function createIssuePanel() {
   const viewer = window.viewerInstance;
@@ -1596,12 +1598,11 @@ async function createIssuePanel() {
     alert("Error retrieving issues. See console for details.");
   }
 }
+// #endregion
 
 
-
-
-
-
+// * issue filter panel
+// #region issue filter panel
 // ------------------------------------------ FILTER PANEL ------------------------------------------------
 async function filterPanel() {
   const viewer = window.viewerInstance;
@@ -1621,11 +1622,11 @@ async function filterPanel() {
     window.viewerInstance.resize();
   }, 300);
 }
+// #endregion
 
 
-
-
-
+// ! issue list
+// #region issue list
 // ------------------------------------------ POPULATE ISSUE LIST ------------------------------------------------
 async function populateIssueList(issues) {
   const container = document.querySelector(".issue-list-container");
@@ -1777,9 +1778,11 @@ async function populateIssueList(issues) {
     }, 200); // delay ensures elements are in DOM
   }
 }
+// #endregion
 
 
-
+// * issue list filtered
+// #region issue list filtered
 // ------------------------------------------ POPULATE ISSUE LIST - FILTERED ------------------------------------------------
 async function populateIssueListFiltered(issues) {
   const container = document.querySelector(".issue-list-container");
@@ -1892,12 +1895,11 @@ async function populateIssueListFiltered(issues) {
     }, 200); // delay ensures elements are in DOM
   }
 }
+// #endregion
 
 
-
-
-
-
+// ! task list
+// #region task list
 // ------------------------------------------ POPULATE TASK LIST ------------------------------------------------
 async function populateTaskList(tasks) {
   const container = document.querySelector(".task-list-container");
@@ -2051,11 +2053,11 @@ async function populateTaskList(tasks) {
     }, 200); // delay ensures elements are in DOM
   }
 }
+// #endregion
 
 
-
-
-
+// * task list filtered
+// #region Task List Filtered
 // ------------------------------------------ POPULATE TASK LIST - FILTERED ------------------------------------------------
 async function populateTaskListFiltered(tasks) {
   const container = document.querySelector(".task-list-container");
@@ -2166,11 +2168,11 @@ async function populateTaskListFiltered(tasks) {
     }, 200); // delay ensures elements are in DOM
   }
 }
+// #endregion
 
 
-
-
-
+// ! Issue types
+// #region Issue Types
 // ------------------------------------------ ISSUE TYPES ------------------------------------------------
 export async function loadIssueTypes(projectId, authToken) {
   await getCustomAttributes(projectId, authToken);
@@ -2318,12 +2320,11 @@ export async function loadIssueTypes(projectId, authToken) {
     });
   });
 }
+// #endregion
 
 
-
-
-
-
+// * Cusom Attributes
+// #region Custom Attributes
 // ------------------------------------------ CUSTOM ATTRIBUTES ------------------------------------------------
 async function getCustomAttributes(projectId, authToken) {
   const res = await fetch("/api/acc/getCustomAttributes", {
@@ -2361,12 +2362,11 @@ function getAttrIdByTitle(title) {
 
   return match.id;
 }
+// #endregion
 
 
-
-
-
-
+// ! Project Members Watchers
+// #region Members Watchers
 // ------------------------------------------ PROJECT MEMBERS ------------------------------------------------
 // project members elligble for being assigned to or being watcher
 async function getProjectMembers(projectId, authToken) {
@@ -2420,9 +2420,11 @@ async function getProjectMembers(projectId, authToken) {
     selectWatchersEdit.appendChild(watcherOption.cloneNode(true)); // Clone to edit watchers select
   });
 }
+// #endregion
 
 
-
+// * Companies Watchers
+// #region Companies Watchers
 // ------------------------------------------ PROJECT MEMBERS - WATCHERS ------------------------------------------------
 // project members elligble for being assigned to or being watcher
 async function getCompanies(projectId, authToken) {
@@ -2486,12 +2488,11 @@ async function getCompanies(projectId, authToken) {
     shouldSort: false,
   });
 }
+// #endregion
 
 
-
-
-
-
+// ! Edit Issue/Task
+// #region Edit Issue/Task
 // ------------------------------------------ EDIT FORM ------------------------------------------------
 async function editIssueTask(id, title, description, issueSubtypeId, status, assignedTo, startDate, dueDate, watchers, issueTask, hardAssetName, functionalLocation) {
   const viewer = window.viewerInstance;
@@ -2540,7 +2541,7 @@ async function editIssueTask(id, title, description, issueSubtypeId, status, ass
   document.getElementById("edit-due-date").value = dueDate || "";
   document.getElementById("edit-placement").value = window.modelName || "";
 }
-
+// #endregion
 
 
 
