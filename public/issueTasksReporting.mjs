@@ -234,9 +234,11 @@ async function pushpinTask(e) {
     // placement
     document.getElementById("task-placement").value = window.modelName;
 
-    // prepare post task
+    // #region Task Form Submit
+    //* prepare post task
     document.getElementById("task-form").onsubmit = async (e) => {
       e.preventDefault();
+      document.getElementById("save-task-btn").attributes.disabled = "true";
       const model = viewer.impl.modelQueue().getModels()[0];
       const versionUrn = model.getData().urn;
       const loadedDocument = viewer.model.getDocumentNode();
@@ -363,6 +365,7 @@ async function pushpinTask(e) {
 
         if (!issueRes.ok) {
           const responseText = await issueRes.text();
+          document.getElementById("save-task-btn").attributes.disabled = "false";
           throw new Error(
             `❌ Failed to create issue. Status: ${issueRes.status}`
           );
@@ -372,7 +375,7 @@ async function pushpinTask(e) {
         const data = await issueRes.json();
         showNotification("Issue created successfully");
         document.getElementById("task-details-panel").style.visibility = "hidden";
-
+        document.getElementById("save-task-btn").attributes.disabled = "false";
         document.getElementById("preview").style.width = "97%";
 
         setTimeout(() => {
@@ -454,6 +457,7 @@ async function pushpinTask(e) {
         alert("Error creating issue. See console for details.");
       }
     };
+    // #endregion
 }
 // #endregion
 
@@ -592,9 +596,11 @@ async function pushpinIssue(e){
     // placement
     document.getElementById("issue-placement").value = window.modelName;
 
+    // #region Issue Form Submit
     // prepare post issue
     document.getElementById("issue-form").onsubmit = async (e) => {
       e.preventDefault();
+      document.getElementById("save-issue-btn").attributes.disabled = "true";
       const model = viewer.impl.modelQueue().getModels()[0];
       const versionUrn = model.getData().urn;
       const loadedDocument = viewer.model.getDocumentNode();
@@ -720,6 +726,7 @@ async function pushpinIssue(e){
 
         if (!issueRes.ok) {
           const responseText = await issueRes.text();
+          document.getElementById("save-issue-btn").attributes.disabled = "false";
           throw new Error(
             `❌ Failed to create issue. Status: ${issueRes.status}`
           );
@@ -730,7 +737,7 @@ async function pushpinIssue(e){
         showNotification("Issue created successfully");
         document.getElementById("issue-details-panel").style.visibility =
           "hidden";
-
+        document.getElementById("save-issue-btn").attributes.disabled = "false";
         document.getElementById("preview").style.width = "97%";
 
 
@@ -795,6 +802,7 @@ async function pushpinIssue(e){
         alert("Error creating issue. See console for details.");
       }
     };
+    // #endregion
 }
 // #endregion
 
@@ -1085,6 +1093,7 @@ async function pushpinIssue(e){
 // ------------------------------------------ UPDATE ISSUE/TASK ------------------------------------------------
 document.getElementById("edit-form").onsubmit = async (e) => {
   e.preventDefault();
+  document.getElementById("save-edit-btn").attributes.disabled = "true";
   const authToken = localStorage.getItem("authTokenHemyProject");
   const viewer = window.viewerInstance;
   const panel = document.getElementById("edit-details-panel");
@@ -1152,13 +1161,14 @@ document.getElementById("edit-form").onsubmit = async (e) => {
 
     if (!issueRes.ok) {
       const responseText = await issueRes.text();
+      document.getElementById("save-edit-btn").attributes.disabled = "false";
       showErrorNotification(`Error creating issue: ${responseText}`);
     }
 
     const data = await issueRes.json();
     showNotification("Issue updated successfully");
     document.getElementById("issue-details-panel").style.visibility = "hidden";
-
+    document.getElementById("save-edit-btn").attributes.disabled = "false";
     document.getElementById("preview").style.width = "97%";
 
     const title = document.getElementById("edit-title").value;

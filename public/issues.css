@@ -387,3 +387,8 @@
 .clear-task-filter-btn:hover {
   background-color: #595a5998;
 }
+
+:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
