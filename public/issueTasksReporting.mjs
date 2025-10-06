@@ -249,7 +249,7 @@ async function pushpinTask(e) {
 
       let params = new URLSearchParams(window.location.search);
       const projectId = params.get("id");
-      const authToken = localStorage.getItem("authToken");
+      const authToken = localStorage.getItem("authTokenHemyProject");
       const title = document.getElementById("task-title").value;
 
       function fixBase64UrlEncoding(str) {
@@ -466,7 +466,7 @@ document.getElementById("task-filter-form").onsubmit = async (e) => {
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   const issueType = document.getElementById("task-types-filter").value;
   const hardAssetId = getAttrIdByTitle("Hard Asset Name");
   const hardAsset = document.getElementById("task-filter-hard-asset").value;
@@ -607,7 +607,7 @@ async function pushpinIssue(e){
 
       let params = new URLSearchParams(window.location.search);
       const projectId = params.get("id");
-      const authToken = localStorage.getItem("authToken");
+      const authToken = localStorage.getItem("authTokenHemyProject");
       const title = document.getElementById("issue-title").value;
 
       function fixBase64UrlEncoding(str) {
@@ -1085,7 +1085,7 @@ async function pushpinIssue(e){
 // ------------------------------------------ UPDATE ISSUE/TASK ------------------------------------------------
 document.getElementById("edit-form").onsubmit = async (e) => {
   e.preventDefault();
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   const viewer = window.viewerInstance;
   const panel = document.getElementById("edit-details-panel");
   panel.style.visibility = "hidden";
@@ -1212,7 +1212,7 @@ document.getElementById("issue-filter-form").onsubmit = async (e) => {
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   const issueType = document.getElementById("issue-types-filter").value;
   const hardAssetId = getAttrIdByTitle("Hard Asset Name");
   const hardAsset = document.getElementById("issue-filter-hard-asset").value;
@@ -1261,7 +1261,7 @@ document.getElementById("issue-filter-form").onsubmit = async (e) => {
 // ------------------------------------------ RESET ISSUE FILTER ------------------------------------------------
 async function resetIssueFilter() {
   document.getElementById("issue-filter-form").reset();
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
@@ -1355,7 +1355,7 @@ async function createIssueTaskPanel(){
   }
 
 
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
@@ -1460,7 +1460,7 @@ async function createTaskPanel() {
 
   pushpin_ext.pushPinManager.removeAllItems();
 
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
@@ -1564,7 +1564,7 @@ async function createIssuePanel() {
     return;
   }
 
-  const authToken = localStorage.getItem("authToken");
+  const authToken = localStorage.getItem("authTokenHemyProject");
   let params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;

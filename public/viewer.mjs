@@ -7,10 +7,10 @@ async function getAccessToken(callback) {
     try {
         // const resp = await fetch('/api/auth/token');
 
-        const access_token = localStorage.getItem('authToken');
-        const refreshToken = localStorage.getItem('refreshToken');
-        const expires_in = localStorage.getItem('expires_at');
-        const internal_token = localStorage.getItem('internal_token');
+        const access_token = localStorage.getItem('authTokenHemyProject');
+        const refreshToken = localStorage.getItem('refreshTokenHemyProject');
+        const expires_in = localStorage.getItem('expires_atHemyProject');
+        const internal_token = localStorage.getItem('internal_tokenHemyProject');
 
 
         // if (!resp.ok)
@@ -93,7 +93,7 @@ export function loadModel(viewer, urn) {
                 window.modelUrn = decodedUrn;
                 let params = new URLSearchParams(window.location.search);
                 const projectId = params.get('id');
-                const authToken = localStorage.getItem('authToken');
+                const authToken = localStorage.getItem('authTokenHemyProject');
                 issuefunctions.loadIssueTypes(projectId, authToken);
 
             }

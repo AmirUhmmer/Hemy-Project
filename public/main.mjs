@@ -110,10 +110,10 @@ function saveTokens(data) {
     return;
   }
 
-  localStorage.setItem("authToken", access);
-  localStorage.setItem("refreshToken", refresh);
-  localStorage.setItem("expires_at", expiresAt.toString());
-  localStorage.setItem("internal_token", internal);
+  localStorage.setItem("authTokenHemyProject", access);
+  localStorage.setItem("refreshTokenHemyProject", refresh);
+  localStorage.setItem("expires_atHemyProject", expiresAt.toString());
+  localStorage.setItem("internal_tokenHemyProject", internal);
 
 //   console.log("💾 Tokens saved:", {
 //     access_token: access.slice(0, 20) + "...",
@@ -129,10 +129,10 @@ function saveTokens(data) {
 
 export function loadTokens() {
     return {
-        access_token: localStorage.getItem("authToken"),
-        refresh_token: localStorage.getItem("refreshToken"),
-        expires_at: parseInt(localStorage.getItem("expires_at"), 10),
-        internal_token: localStorage.getItem("internal_token")
+        access_token: localStorage.getItem("authTokenHemyProject"),
+        refresh_token: localStorage.getItem("refreshTokenHemyProject"),
+        expires_at: parseInt(localStorage.getItem("expires_atHemyProject"), 10),
+        internal_token: localStorage.getItem("internal_tokenHemyProject")
     };
 }
 

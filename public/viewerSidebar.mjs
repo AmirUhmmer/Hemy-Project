@@ -201,7 +201,7 @@ document.getElementById("upload-btn").onclick = async (e) => {
   const projectId = 'b.' + params.get('id');
 
   // const folderUrn = 'urn:adsk.wipemea:fs.folder:co.pJtm7c96SquVtn6AmedMow';
-  const authToken = localStorage.getItem('authToken');
+  const authToken = localStorage.getItem('authTokenHemyProject');
 
 
   try {

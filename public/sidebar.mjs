@@ -1,8 +1,8 @@
 async function getJSON(url) {
-    const token = localStorage.getItem('authToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-    const expires_at = localStorage.getItem('expires_at');
-    const internal_token = localStorage.getItem('internal_token');
+    const token = localStorage.getItem('authTokenHemyProject');
+    const refreshToken = localStorage.getItem('refreshTokenHemyProject');
+    const expires_at = localStorage.getItem('expires_atHemyProject');
+    const internal_token = localStorage.getItem('internal_tokenHemyProject');
 
 
     console.log("Request URL:", url);
