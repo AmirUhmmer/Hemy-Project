@@ -2,6 +2,9 @@ import * as functions from './functions.mjs';
 import * as issuefunctions from './issueTasksReporting.mjs';
 
 let viewerInstance;
+let params = new URLSearchParams(window.location.search);
+const projectId = params.get('id');
+const authToken = localStorage.getItem('authTokenHemyProject');
 
 async function getAccessToken(callback) {
     try {
@@ -60,7 +63,6 @@ export function initViewer(container) {
 }
 
 // ******************************* WORKING ************************
-// URN:  dXJuOmFkc2sud2lwZW1lYTpmcy5maWxlOnZmLkpiRWpmR1VPUjQtbEZBQ3dRMmcxOXc/dmVyc2lvbj01
 export function loadModel(viewer, urn) {
     // console.log("URN: ", urn);
     async function onDocumentLoadSuccess(doc) {
@@ -85,17 +87,14 @@ export function loadModel(viewer, urn) {
                 const decodedUrn = atob(urn.replace(/_/g, '/').replace(/-/g, '+'));
                 console.log("Decoded URN:", decodedUrn);
                 window.modelUrn = decodedUrn;
+                issuefunctions.loadIssueTypes(projectId, authToken);
             } else {
                 functions.sidebarButtons3D(viewer);
                 viewer.model.getSeedUrn();
                 const decodedUrn = atob(urn.replace(/_/g, '/').replace(/-/g, '+'));
                 console.log("Decoded URN:", decodedUrn);
                 window.modelUrn = decodedUrn;
-                let params = new URLSearchParams(window.location.search);
-                const projectId = params.get('id');
-                const authToken = localStorage.getItem('authTokenHemyProject');
                 issuefunctions.loadIssueTypes(projectId, authToken);
-
             }
         }
     }

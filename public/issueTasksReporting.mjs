@@ -1370,7 +1370,7 @@ async function createIssueTaskPanel(){
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
   const issueTaskId = getAttrIdByTitle("Issue/Task");
-
+  // console.log("Issue/Task Attr ID:", issueTaskId);
   try {
     const issueRes = await fetch("/api/acc/getissues", {
       method: "POST",
