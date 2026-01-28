@@ -425,7 +425,8 @@ async function pushpinTask(e) {
         //CREATE RECORD ON HEMY X  ---- TASK
         const hemyX = await fetch(
           // "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
-          "https://prod-170.westeurope.logic.azure.com:443/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TRdZa8YTpSYN-HN9xsoiiguhY6PTAXQqkhBevorjglI",
+          // "https://prod-170.westeurope.logic.azure.com:443/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TRdZa8YTpSYN-HN9xsoiiguhY6PTAXQqkhBevorjglI", // OLD PROD
+          "https://29334670b81e4af2b6686cd5acb473.55.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=b1Sm7mTuwOV7lbJO4yUTk00FXu8PLjn8Y1N8PX-9wlw",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -766,7 +767,8 @@ async function pushpinIssue(e){
         //CREATE RECORD ON HEMY X  ---- ISSUE
         const hemyX = await fetch(
           // "https://304525ba25f2ef1886aa9d4e4cba52.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9c1232c6ac81454abbbfec500909b093/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_q7LGd9g1WLPvBSas6Bp6ttzHuEctIodybpjnHRtnBA",
-          "https://prod-170.westeurope.logic.azure.com:443/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TRdZa8YTpSYN-HN9xsoiiguhY6PTAXQqkhBevorjglI",
+          // "https://prod-170.westeurope.logic.azure.com:443/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TRdZa8YTpSYN-HN9xsoiiguhY6PTAXQqkhBevorjglI", // OLD PROD
+          "https://29334670b81e4af2b6686cd5acb473.55.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0da3ea68dcf04cae9b647c433804bd84/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=b1Sm7mTuwOV7lbJO4yUTk00FXu8PLjn8Y1N8PX-9wlw",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
