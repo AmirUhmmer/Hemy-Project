@@ -1315,65 +1315,74 @@ async function resetIssueFilter() {
 // * issue task panel
 // #region issue task panel
 // ------------------------------------------ ISSUE TASK PANEL ------------------------------------------------
-async function createIssueTaskPanel(){
+async function createIssueTaskPanel() {
   const viewer = window.viewerInstance;
-
   const panel = document.getElementById("issues-and-tasks-panel");
 
-  document.getElementById("fileContainer").style.visibility = "hidden";
-  document.getElementById("model-browser-panel").style.visibility = "hidden";
-  document.getElementById("sheetsPanel").style.visibility = "hidden";
-  document.getElementById("file-upload-panel").style.visibility = "hidden";
+  // -------------------------
+  // Hide all other panels
+  // -------------------------
+  const panelsToHide = [
+    "fileContainer", "model-browser-panel", "sheetsPanel", "file-upload-panel",
+    "issue-panel", "issue-details-panel", "issue-filter-panel",
+    "task-panel", "task-details-panel", "task-filter-panel", "edit-details-panel"
+  ];
+  panelsToHide.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.visibility = "hidden";
+  });
 
-  document.getElementById("issue-panel").style.visibility = "hidden";
-  document.getElementById("issue-details-panel").style.visibility = "hidden";
-  document.getElementById("issue-filter-panel").style.visibility = "hidden";
-  document.getElementById("task-panel").style.visibility = "hidden";
-  document.getElementById("task-details-panel").style.visibility = "hidden";
-  document.getElementById("task-filter-panel").style.visibility = "hidden";
-  document.getElementById("edit-details-panel").style.visibility = "hidden";
-
+  // -------------------------
+  // Toggle main panel visibility
+  // -------------------------
   const isVisible = panel.style.visibility === "visible";
   panel.style.visibility = isVisible ? "hidden" : "visible";
-  panel.style.visibility = isVisible
-    ? (document.getElementById("preview").style.width = "97%")
-    : (document.getElementById("preview").style.width = "72%");
+  document.getElementById("preview").style.width = isVisible ? "97%" : "72%";
 
   setTimeout(() => {
     viewer.resize();
     viewer.fitToView();
   }, 300);
 
-
-    // Load PushPin extension if not already loaded
+  // -------------------------
+  // Load PushPin extension
+  // -------------------------
   const extName = "Autodesk.BIM360.Extension.PushPin";
-  let pushpin_ext = viewer.getExtension(extName);
-  if (!pushpin_ext) {
-    pushpin_ext = await viewer.loadExtension(extName);
-  }
-
+  let pushpin_ext = viewer.getExtension(extName) || await viewer.loadExtension(extName);
   pushpin_ext.pushPinManager.removeAllItems();
 
-
-
-  // 🛑 Check if already populated
-  const container = document.querySelector(".issue-list-container");
+  // Skip fetch if panel is hidden
   if (panel.style.visibility === "hidden") {
     console.log("Issue list hidden. Skipping fetch.");
-    pushpin_ext.pushPinManager.removeAllItems();
     pushpin_ext.endCreateItem();
-
     return;
   }
 
-
+  // -------------------------
+  // Get required parameters
+  // -------------------------
   const authToken = localStorage.getItem("authTokenHemyProject");
-  let params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
   const projectId = params.get("id");
   const lineageUrn = window.lineageUrn;
-  const issueTaskId = getAttrIdByTitle("Issue/Task");
-  // console.log("Issue/Task Attr ID:", issueTaskId);
+  const issueTaskId = getAttrIdByTitle("Issue/Task"); // make sure this exists in prod
+
+  // -------------------------
+  // Validate parameters
+  // -------------------------
+  if (!projectId || !lineageUrn || !issueTaskId) {
+    console.error("Cannot fetch issues/tasks. Missing fields:", { projectId, lineageUrn, issueTaskId });
+    showNotification("Cannot fetch issues/tasks: required data missing");
+    alert("Cannot fetch issues/tasks: missing required data. Check console for details.");
+    return;
+  }
+
+  console.log("Fetching issues & tasks with:", { projectId, lineageUrn, issueTaskId });
+
   try {
+    // -------------------------
+    // Fetch issues
+    // -------------------------
     const issueRes = await fetch("/api/acc/getissues", {
       method: "POST",
       headers: {
@@ -1385,20 +1394,18 @@ async function createIssueTaskPanel(){
 
     if (!issueRes.ok) {
       const responseText = await issueRes.text();
-      throw new Error(
-        `❌ Failed to get issues. Status: ${issueRes.status}\n${responseText}`
-      );
+      console.error("Failed to fetch issues:", responseText);
+      throw new Error(`Failed to get issues. Status: ${issueRes.status}`);
     }
 
-    const data = await issueRes.json();
-    showNotification("Issue & Tasks list retrieved successfully");
-
-    const issues = data.details?.results || [];
+    const issueData = await issueRes.json();
+    const issues = issueData.details?.results || [];
     await populateIssueList(issues);
+    showNotification("Issue list retrieved successfully");
 
-    
-
-    //tasks
+    // -------------------------
+    // Fetch tasks
+    // -------------------------
     const taskRes = await fetch("/api/acc/getTasks", {
       method: "POST",
       headers: {
@@ -1410,24 +1417,21 @@ async function createIssueTaskPanel(){
 
     if (!taskRes.ok) {
       const responseText = await taskRes.text();
-      throw new Error(
-        `❌ Failed to get issues. Status: ${taskRes.status}\n${responseText}`
-      );
+      console.error("Failed to fetch tasks:", responseText);
+      throw new Error(`Failed to get tasks. Status: ${taskRes.status}`);
     }
 
     const taskData = await taskRes.json();
-    showNotification("Issue & Tasks list retrieved successfully");
-
     const tasks = taskData.details?.results || [];
     await populateTaskList(tasks);
+    showNotification("Task list retrieved successfully");
 
+    // Final viewer resize
     viewer.resize();
   } catch (err) {
-    console.error(err);
-    alert("Error retrieving issues. See console for details.");
+    console.error("Error retrieving issues/tasks:", err);
+    showNotification("Error retrieving issues/tasks. See console for details.");
   }
-
-  
 }
 // #endregion
 
